@@ -94,3 +94,20 @@ html{font-family:"Alexandria","Segoe UI",Tahoma,Arial,sans-serif}body,button,inp
   .hero h1{font-size:2.1rem;line-height:1.28}.hero__tagline{font-size:1.05rem}.hero p{font-size:.9rem;line-height:1.8}
   .hero__content::before{width:60px;height:60px;background-size:52px 52px}
 }
+
+/* Lighter Arabic typography and visual covers for inner pages. */
+body{font-weight:390}.main-nav,.button,.cart-link,.eyebrow{font-weight:600}strong,b{font-weight:600}
+h1,h2,h3,.hero h1,.page-hero h1,.section-heading h2,.finder-band h2,.whatsapp-cta h2,.product-info h1{font-weight:600;letter-spacing:-.02em}
+.hero__content::before{display:none}
+.hero h1{font-size:clamp(2.2rem,3.45vw,3.45rem);font-weight:600}.hero__tagline{font-weight:430}
+.page-hero.container{position:relative;width:100%;min-height:370px;max-width:none;display:flex;flex-direction:column;justify-content:center;margin:0;padding:72px max(16px,calc((100% - 1200px)/2));color:#fff;background-image:linear-gradient(90deg,rgba(5,8,6,.3),rgba(5,8,6,.84)),url("../images/hero/archiciva-hero-1600.webp");background-size:cover;background-position:center;border-radius:0;overflow:hidden}
+.page-hero .eyebrow{color:#ffd0a3}.page-hero h1{margin:.12em 0;color:#fff;font-size:clamp(2.1rem,3.2vw,3.2rem)}.page-hero p{max-width:680px;margin:.6em 0 0;color:#f0f3f1;font-weight:380}
+.about-page .page-hero{min-height:520px;background-image:linear-gradient(90deg,rgba(5,8,6,.22),rgba(5,8,6,.78)),url("../images/hero/about-office-1600.webp");background-position:center}
+.about-page .prose h2,.static-page .prose h2{font-weight:600}.prose p,.prose li{font-weight:380}
+
+@media(max-width:760px){
+  body{font-weight:380}.hero h1{font-size:2.05rem}.hero__tagline{font-weight:420}
+  .page-hero.container{min-height:300px;padding-block:52px;background-image:linear-gradient(0deg,rgba(5,8,6,.84),rgba(5,8,6,.3)),url("../images/hero/archiciva-hero-960.webp")}
+  .page-hero h1{font-size:2rem}.page-hero p{font-size:.9rem;line-height:1.75}
+  .about-page .page-hero{min-height:390px;background-image:linear-gradient(0deg,rgba(5,8,6,.82),rgba(5,8,6,.2)),url("../images/hero/about-office-960.webp");background-position:center}
+}

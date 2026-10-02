@@ -24,7 +24,7 @@ const finalizeHtml=(html,route)=>{
   .replace(new RegExp(`href="https://wa.me/${site.whatsapp}"`,'g'),`href="https://wa.me/${site.whatsapp}?text=${whatsappGreeting}"`)
   .replace(/<button class="assistant-fab"([^>]*)><span>✦<\/span> مساعدة<\/button>/g,'<button class="assistant-fab"$1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h4l4 3 4-3h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-3 10H7v-2h10v2Zm0-4H7V6h10v2Zm-4 8H7v-2h6v2Z"/></svg><span class="assistant-fab__label">مساعدة</span></button>')
   .replace(/ ر\.س/g," ريال")
-  .replace("</head>",'<link rel="stylesheet" href="/assets/styles/overrides.css?v=20261002-4"></head>')
+  .replace("</head>",'<link rel="stylesheet" href="/assets/styles/overrides.css?v=20261002-5"></head>')
   .replace(/href="\/"/g,'href="index.html"')
   .replace(/(href|src)="\/(?!\/)/g,'$1="')
   .replace(/([", ])\/assets\//g,"$1assets/");
@@ -51,6 +51,7 @@ for(const p of products){
   }
 }
 for(const width of [960,1600]){const target=path.join(dist,"assets/images/hero",`archiciva-hero-${width}.webp`);ensure(path.dirname(target));jobs.push(sharp(path.join(root,"source-assets","brand","cover.png")).resize({width,withoutEnlargement:true}).webp({quality:84,effort:5}).toFile(target));}
+for(const width of [960,1600]){const target=path.join(dist,"assets/images/hero",`about-office-${width}.webp`);ensure(path.dirname(target));jobs.push(sharp(path.join(root,"source-assets","brand","about-office-reception.jpg")).resize({width,withoutEnlargement:true}).webp({quality:84,effort:5}).toFile(target));}
 ensure(path.join(dist,"assets/images/brand"));
 jobs.push(sharp(path.join(root,"source-assets","brand","logo.png")).resize(256,256).webp({quality:88}).toFile(path.join(dist,"assets/images/brand/archiciva-logo.webp")));
 jobs.push(sharp(path.join(root,"source-assets","brand","logo.png")).resize(180,180).png().toFile(path.join(dist,"assets/images/brand/apple-touch-icon.png")));

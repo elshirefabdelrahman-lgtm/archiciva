@@ -28,4 +28,5 @@ for(const file of htmlFiles){
   }
 }
 for(const file of ["robots.txt","sitemap.xml","assets/images/brand/favicon-32.png","assets/styles/main.css","assets/styles/overrides.css","assets/scripts/app.js","assets/icons/saudi-riyal-symbol.svg","assets/fonts/alexandria-arabic.woff2","assets/fonts/alexandria-latin.woff2"])if(!fs.existsSync(path.join(dist,file)))errors.push(`Missing ${file}`);
+for(const file of ["assets/images/hero/about-office-960.webp","assets/images/hero/about-office-1600.webp"])if(!fs.existsSync(path.join(dist,file)))errors.push(`Missing ${file}`);
 if(errors.length){console.error(errors.join("\n"));process.exit(1);}console.log(`Validation passed: ${products.length} products, ${htmlFiles.length} HTML files, no missing local assets.`);
