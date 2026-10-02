@@ -12,7 +12,6 @@ const dist=path.join(root,"dist");
 const ensure=p=>fs.mkdirSync(p,{recursive:true});
 const whatsappGreeting=encodeURIComponent("مرحبًا، أود الاستفسار عن منتجات ArchiCiva");
 const finalizeHtml=(html)=>html
-  .replace('<link rel="stylesheet" href="/assets/styles/main.css">','<link rel="stylesheet" href="/assets/styles/main.css"><link rel="stylesheet" href="/assets/styles/overrides.css">')
   .replace(/<p class="demo-note">[^<]*<\/p>/g,"")
   .replace(/الأسعار المعروضة تجريبية وتحتاج إلى اعتماد قبل الطلب النهائي\./g,"السعر ظاهر في بطاقة المنتج وصفحته، ويمكن إرسال المنتجات المختارة عبر واتساب.")
   .replace(/<span>الأسعار الحالية تجريبية وتحتاج إلى اعتماد\.<\/span>/g,`<a class="whatsapp-link" href="https://wa.me/${site.whatsapp}?text=${whatsappGreeting}" target="_blank" rel="noopener">تواصل عبر واتساب</a>`)
@@ -39,11 +38,11 @@ for(const p of products){
     jobs.push(sharp(source).resize({width,height,fit:"contain",background:"#ffffff"}).webp({quality:82,effort:5}).toFile(target));
   }
 }
-for(const width of [960,1600]){const target=path.join(dist,"assets/images/hero",`archiciva-hero-${width}.webp`);ensure(path.dirname(target));jobs.push(sharp(path.join(root,"غلاف.png")).resize({width,withoutEnlargement:true}).webp({quality:84,effort:5}).toFile(target));}
+for(const width of [960,1600]){const target=path.join(dist,"assets/images/hero",`archiciva-hero-${width}.webp`);ensure(path.dirname(target));jobs.push(sharp(path.join(root,"source-assets","brand","cover.png")).resize({width,withoutEnlargement:true}).webp({quality:84,effort:5}).toFile(target));}
 ensure(path.join(dist,"assets/images/brand"));
-jobs.push(sharp(path.join(root,"logo .png")).resize(256,256).webp({quality:88}).toFile(path.join(dist,"assets/images/brand/archiciva-logo.webp")));
-jobs.push(sharp(path.join(root,"logo .png")).resize(180,180).png().toFile(path.join(dist,"assets/images/brand/apple-touch-icon.png")));
-jobs.push(sharp(path.join(root,"logo .png")).resize(32,32).png().toFile(path.join(dist,"assets/images/brand/favicon-32.png")));
+jobs.push(sharp(path.join(root,"source-assets","brand","logo.png")).resize(256,256).webp({quality:88}).toFile(path.join(dist,"assets/images/brand/archiciva-logo.webp")));
+jobs.push(sharp(path.join(root,"source-assets","brand","logo.png")).resize(180,180).png().toFile(path.join(dist,"assets/images/brand/apple-touch-icon.png")));
+jobs.push(sharp(path.join(root,"source-assets","brand","logo.png")).resize(32,32).png().toFile(path.join(dist,"assets/images/brand/favicon-32.png")));
 await Promise.all(jobs);
 
 write("/",homePage());

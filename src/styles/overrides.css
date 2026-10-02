@@ -1,14 +1,19 @@
-/* Final visual refinements: dark navigation, official Saudi Riyal mark and polished actions. */
-.site-header{position:sticky;top:0;background:#0c0f0d;border-bottom:1px solid rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.12)}
-.header-top{background:#050605;border-bottom:1px solid rgba(255,255,255,.1)}
-.nav-wrap,.site-header .brand,.site-header .main-nav,.site-header .nav-actions,.site-header .menu-toggle,.site-header .icon-button,.site-header .cart-link{color:#fff}
-.site-header .brand b{color:#fff}.site-header .brand small{color:#c6ccc8}.site-header .brand img{background:#fff;padding:4px}
-.site-header .menu-toggle{border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:7px 12px}
-.site-header .search-panel{background:#111512;color:#fff;border-color:#283029}.site-header .search-row input{color:#111}
-.money{display:inline-flex;direction:rtl;align-items:center;gap:.32em;white-space:nowrap}.sar-symbol{width:.78em;height:.88em;display:inline-block;object-fit:contain;filter:none}
-.price .sar-symbol,.product-price .sar-symbol{color:var(--brand-dark)}
-.whatsapp-link{display:inline-flex;align-items:center;gap:8px;font-weight:800}.whatsapp-link:before{content:"";width:10px;height:10px;border-radius:50%;background:#25d366;box-shadow:0 0 0 4px rgba(37,211,102,.16)}
-.assistant-fab{width:58px;height:58px;padding:0;justify-content:center;border-radius:50%;background:#111;color:#fff;border:1px solid rgba(255,255,255,.18)}
-.assistant-fab svg{width:26px;height:26px;fill:currentColor}.assistant-fab .assistant-fab__label{position:absolute;clip:rect(0 0 0 0);clip-path:inset(50%);width:1px;height:1px;overflow:hidden}
-.footer-bottom{align-items:center}.footer-bottom .whatsapp-link{color:#fff}
-@media(max-width:900px){.site-header .main-nav{background:#0c0f0d;border-color:#2c332e}.header-top .container{justify-content:center}.header-top span{display:none}}
+/* Final interface refinements. */
+.header-top{display:none!important}
+.site-header{position:sticky;top:0;z-index:80;background:#090b0a;border-bottom:1px solid #242825;box-shadow:0 8px 24px rgba(0,0,0,.16)}
+.nav-wrap{height:70px;gap:18px}.site-header .brand,.site-header .main-nav,.site-header .nav-actions,.site-header .menu-toggle,.site-header .icon-button,.site-header .cart-link{color:#fff}
+.site-header .brand b{color:#fff}.site-header .brand small{color:#adb4af}.site-header .brand img{width:48px;height:48px;background:#fff;padding:3px;border-radius:10px}
+.main-nav{gap:15px;font-size:.82rem}.main-nav a{white-space:nowrap}.main-nav a:after{inset-block-end:-6px}
+.nav-actions{gap:8px}.site-header .menu-toggle{border:1px solid #3a403c;border-radius:9px;padding:6px 10px;font-size:.82rem}.site-header .search-panel{background:#111512;color:#fff;border-color:#283029}.site-header .search-row input{color:#111}
+.whatsapp-icon-link{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#25d366;color:#fff;transition:.2s}.whatsapp-icon-link:hover{transform:translateY(-2px);background:#1fb85a}.whatsapp-icon{width:23px;height:23px}.whatsapp-icon-link--footer{width:auto;height:auto;min-width:44px;min-height:44px;padding:9px 14px;border-radius:999px;gap:8px}.whatsapp-icon-link--footer span{color:#fff}
+.whatsapp-cta-button{gap:8px}.whatsapp-cta-button .whatsapp-icon,.button .whatsapp-icon{width:21px;height:21px}
+.whatsapp-link:before{display:none!important}
+.money{display:inline-flex;direction:rtl;align-items:center;gap:.32em;white-space:nowrap}.sar-symbol{width:.78em;height:.88em;display:inline-block;object-fit:contain}
+.category-strip{gap:12px;padding:12px;background:rgba(255,255,255,.96);box-shadow:0 16px 40px rgba(0,0,0,.12)}.category-strip a{display:flex;min-height:132px;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:20px;border:1px solid #e6e9e6!important;border-radius:15px;background:#fff;transition:.2s}.category-strip a:hover{transform:translateY(-3px);border-color:var(--brand)!important}.category-strip b{font-size:1.05rem}.category-strip small{line-height:1.55}.category-strip em{margin-top:5px;color:var(--brand-dark);font-size:.78rem;font-style:normal;font-weight:800}
+.finder-band{background:#0b0d0c}.finder-action-card{display:flex;min-height:245px;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px;border:1px solid #313633;border-radius:24px;background:#151917;text-align:center}.finder-action-card span{color:#aeb6b0}.finder-action-card strong{font-size:1.7rem}.finder-action-card .button{margin-top:8px}
+.site-footer{background:#050605}.footer-grid p{color:#aeb4b0}.footer-grid a{color:#e7e9e7}.footer-bottom{justify-content:center;border-color:#252925;color:#929893}.footer-bottom .whatsapp-link{display:none}
+.assistant-fab{width:54px;height:54px;padding:0;justify-content:center;border-radius:50%;background:#111;color:#fff;border:1px solid #333}.assistant-fab svg{width:25px;height:25px;fill:currentColor}.assistant-fab__label{position:absolute;clip:rect(0 0 0 0);clip-path:inset(50%);width:1px;height:1px;overflow:hidden}
+@media(max-width:1100px){.main-nav{gap:10px;font-size:.76rem}.nav-wrap{gap:12px}}
+@media(max-width:1000px){.main-nav{inset-inline:12px;top:calc(100% + 6px);max-height:min(62vh,420px);overflow:auto;padding:10px;border:1px solid #303632;border-radius:12px;background:#0c0f0d;box-shadow:0 18px 45px rgba(0,0,0,.3)}.main-nav.open{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.main-nav a{padding:9px 10px;border-radius:8px;background:#151917;font-size:.82rem}.main-nav a:after{display:none}.menu-toggle{display:block;margin-inline-start:auto}.nav-wrap{height:64px}.site-header .brand img{width:44px;height:44px}.site-header .brand small{display:none}}
+@media(max-width:760px){.site-header .brand b{font-size:1rem}.nav-actions{gap:4px}.whatsapp-icon-link{width:34px;height:34px}.whatsapp-icon{width:21px;height:21px}.cart-link b{width:22px;height:22px}.category-strip{grid-template-columns:1fr;gap:8px;margin-top:0;padding:10px;width:100%;border-radius:0}.category-strip a{min-height:auto;padding:15px 16px}.finder-action-card{min-height:190px}.footer-grid{grid-template-columns:1fr;gap:22px}.site-footer{padding-top:48px}.footer-bottom{margin-top:28px}.assistant-shell{height:min(560px,calc(100vh - 96px))}}
+@media(max-width:420px){.nav-wrap{gap:7px}.site-header .brand span{display:none}.site-header .menu-toggle{padding:5px 8px}.main-nav.open{grid-template-columns:1fr 1fr}.site-header .icon-button{display:none}.hero h1{font-size:2.35rem}}
