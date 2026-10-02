@@ -28,7 +28,7 @@ const finalizeHtml=(html,route)=>{
   .replace(/<div class="benefits">[\s\S]*?<\/div><\/div><\/section><section class="whatsapp-cta">/,'<div class="benefits"><article><span>01</span><h3>خبرة واحترافية</h3><p>تنفيذ منظم يراعي تفاصيل العمل وجودة النتيجة.</p></article><article><span>02</span><h3>خدمات متكاملة</h3><p>من التصميم والتجهيز إلى تنسيق عناصر المساحة.</p></article><article><span>03</span><h3>تصاميم عصرية</h3><p>حلول متنوعة تناسب طبيعة المساحة واحتياج العميل.</p></article><article><span>04</span><h3>جودة في التنفيذ</h3><p>اهتمام بالخامات والتفاصيل في كل مرحلة.</p></article></div></div></section><section class="whatsapp-cta">')
   .replace(/favicon-32\.png/g,"favicon-32.png?v=20261002-7")
   .replace(/apple-touch-icon\.png/g,"apple-touch-icon.png?v=20261002-7")
-  .replace("</head>",'<link rel="stylesheet" href="/assets/styles/overrides.css?v=20261002-7"></head>')
+  .replace("</head>",'<link rel="stylesheet" href="/assets/styles/overrides.css?v=20261002-8"></head>')
   .replace(/href="\/"/g,'href="index.html"')
   .replace(/(href|src)="\/(?!\/)/g,'$1="')
   .replace(/([", ])\/assets\//g,"$1assets/");
