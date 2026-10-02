@@ -12,6 +12,6 @@ export const categories = [
 
 export const categoryGroups = [
   { id: "planters", name: "المراكن وأحواض الزراعة", slug: "planters", description: "اكتشف المراكن والأحواض بحسب الشكل والحجم وطبيعة المساحة." },
-  { id: "water-features", name: "النوافير والعناصر المائية", slug: "water-features", description: "نوافير وشلالات بتصاميم كلاسيكية وحديثة للمساحات المختلفة." },
+  { id: "water-features", name: "النوافير والشلالات", slug: "water-features", description: "نوافير وشلالات بتصاميم كلاسيكية وحديثة للمساحات المختلفة." },
   { id: "decor", name: "الديكور والأثاث", slug: "decor", description: "قطع مختارة لإكمال تنسيق المساحات." }
 ];
