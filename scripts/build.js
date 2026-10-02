@@ -24,6 +24,7 @@ const finalizeHtml=(html,route)=>{
   .replace(new RegExp(`href="https://wa.me/${site.whatsapp}"`,'g'),`href="https://wa.me/${site.whatsapp}?text=${whatsappGreeting}"`)
   .replace(/<button class="assistant-fab"([^>]*)><span>✦<\/span> مساعدة<\/button>/g,'<button class="assistant-fab"$1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h4l4 3 4-3h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-3 10H7v-2h10v2Zm0-4H7V6h10v2Zm-4 8H7v-2h6v2Z"/></svg><span class="assistant-fab__label">مساعدة</span></button>')
   .replace(/ ر\.س/g," ريال")
+  .replace("</head>",'<link rel="stylesheet" href="/assets/styles/overrides.css?v=20261002-4"></head>')
   .replace(/href="\/"/g,'href="index.html"')
   .replace(/(href|src)="\/(?!\/)/g,'$1="')
   .replace(/([", ])\/assets\//g,"$1assets/");
