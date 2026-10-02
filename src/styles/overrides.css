@@ -1,0 +1,14 @@
+/* Final visual refinements: dark navigation, official Saudi Riyal mark and polished actions. */
+.site-header{position:sticky;top:0;background:#0c0f0d;border-bottom:1px solid rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.header-top{background:#050605;border-bottom:1px solid rgba(255,255,255,.1)}
+.nav-wrap,.site-header .brand,.site-header .main-nav,.site-header .nav-actions,.site-header .menu-toggle,.site-header .icon-button,.site-header .cart-link{color:#fff}
+.site-header .brand b{color:#fff}.site-header .brand small{color:#c6ccc8}.site-header .brand img{background:#fff;padding:4px}
+.site-header .menu-toggle{border:1px solid rgba(255,255,255,.35);border-radius:10px;padding:7px 12px}
+.site-header .search-panel{background:#111512;color:#fff;border-color:#283029}.site-header .search-row input{color:#111}
+.money{display:inline-flex;direction:rtl;align-items:center;gap:.32em;white-space:nowrap}.sar-symbol{width:.78em;height:.88em;display:inline-block;object-fit:contain;filter:none}
+.price .sar-symbol,.product-price .sar-symbol{color:var(--brand-dark)}
+.whatsapp-link{display:inline-flex;align-items:center;gap:8px;font-weight:800}.whatsapp-link:before{content:"";width:10px;height:10px;border-radius:50%;background:#25d366;box-shadow:0 0 0 4px rgba(37,211,102,.16)}
+.assistant-fab{width:58px;height:58px;padding:0;justify-content:center;border-radius:50%;background:#111;color:#fff;border:1px solid rgba(255,255,255,.18)}
+.assistant-fab svg{width:26px;height:26px;fill:currentColor}.assistant-fab .assistant-fab__label{position:absolute;clip:rect(0 0 0 0);clip-path:inset(50%);width:1px;height:1px;overflow:hidden}
+.footer-bottom{align-items:center}.footer-bottom .whatsapp-link{color:#fff}
+@media(max-width:900px){.site-header .main-nav{background:#0c0f0d;border-color:#2c332e}.header-top .container{justify-content:center}.header-top span{display:none}}
