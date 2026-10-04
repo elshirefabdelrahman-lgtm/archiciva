@@ -11,6 +11,15 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const dist=path.join(root,"dist");
 const ensure=p=>fs.mkdirSync(p,{recursive:true});
 const whatsappGreeting=encodeURIComponent("مرحبًا، أود الاستفسار عن منتجات ArchiCiva");
+const policyIcons={
+  1:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 7h-7a5 5 0 0 0-5 5v1"/><path d="m17 4 3 3-3 3M4 17h7a5 5 0 0 0 5-5v-1"/><path d="m7 20-3-3 3-3"/></svg>',
+  2:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>',
+  3:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4 7 8-4 8 4-8 4zM4 7v10l8 4 8-4V7M12 11v10"/><path d="m8 5 8 4"/></svg>',
+  4:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3 3.8 18a2 2 0 0 0 1.8 3h12.8a2 2 0 0 0 1.8-3z"/><path d="M12 9v5M12 18h.01"/></svg>',
+  5:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
+  6:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>',
+  7:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 15a3 3 0 0 1-3 3H9l-5 3v-6a3 3 0 0 1-1-2V7a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3z"/><path d="M8 9h8M8 13h5"/></svg>'
+};
 const finalizeHtml=(html,route)=>{
   const depth=route==="/"?0:route.split("/").filter(Boolean).length;
   const baseHref=depth?"../".repeat(depth):"./";
@@ -24,12 +33,13 @@ const finalizeHtml=(html,route)=>{
   .replace(new RegExp(`href="https://wa.me/${site.whatsapp}"`,'g'),`href="https://wa.me/${site.whatsapp}?text=${whatsappGreeting}"`)
   .replace(/<button class="assistant-fab"([^>]*)><span>✦<\/span> مساعدة<\/button>/g,'<button class="assistant-fab"$1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h4l4 3 4-3h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-3 10H7v-2h10v2Zm0-4H7V6h10v2Zm-4 8H7v-2h6v2Z"/></svg><span class="assistant-fab__label">مساعدة</span></button>')
   .replace(/ ر\.س/g," ريال")
+  .replace(/<span class="policy-number">0([1-7])<\/span>/g,(_,number)=>`<span class="policy-icon">${policyIcons[number]}</span>`)
   .replace(/<div class="container hero__content">[\s\S]*?<\/div><\/section><section class="category-strip/, '<div class="container hero__content"><h1>تشييد العمارة العربية</h1><strong class="hero__tagline">نصنع الجمال في كل مساحة</strong><div class="hero__services" aria-label="خدمات ومنتجات الشركة"><span>مراكن</span><span>شلالات</span><span>نوافير</span><span>أثاث</span><span>ديكور</span><span>تنسيق حدائق</span></div><div class="hero__actions"><a class="button hero__primary" href="/products/">اكتشف منتجاتنا</a><a class="button button--glass" href="/product-finder/">ساعدني أختار</a></div></div></section><section class="category-strip')
   .replace(/<div class="benefits">[\s\S]*?<\/div><\/div><\/section><section class="whatsapp-cta">/,'<div class="benefits"><article><span>01</span><h3>خبرة واحترافية</h3><p>تنفيذ منظم يراعي تفاصيل العمل وجودة النتيجة.</p></article><article><span>02</span><h3>خدمات متكاملة</h3><p>من التصميم والتجهيز إلى تنسيق عناصر المساحة.</p></article><article><span>03</span><h3>تصاميم عصرية</h3><p>حلول متنوعة تناسب طبيعة المساحة واحتياج العميل.</p></article><article><span>04</span><h3>جودة في التنفيذ</h3><p>اهتمام بالخامات والتفاصيل في كل مرحلة.</p></article></div></div></section><section class="whatsapp-cta">')
   .replace(/favicon-32\.png/g,"favicon-32.png?v=20261002-7")
   .replace(/apple-touch-icon\.png/g,"apple-touch-icon.png?v=20261002-7")
   .replace(/archiciva-logo\.webp/g,"archiciva-mark-transparent.webp")
-  .replace("</head>",'<link rel="stylesheet" href="/assets/styles/overrides.css?v=20261002-8"></head>')
+  .replace("</head>",'<link rel="stylesheet" href="/assets/styles/overrides.css?v=20261004-9"></head>')
   .replace(/href="\/"/g,'href="index.html"')
   .replace(/(href|src)="\/(?!\/)/g,'$1="')
   .replace(/([", ])\/assets\//g,"$1assets/");
