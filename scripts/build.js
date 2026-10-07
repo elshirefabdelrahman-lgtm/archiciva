@@ -21,6 +21,12 @@ const policyIcons={
   7:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 15a3 3 0 0 1-3 3H9l-5 3v-6a3 3 0 0 1-1-2V7a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3z"/><path d="M8 9h8M8 13h5"/></svg>'
 };
 const privacyIcon=paths=>`<span class="privacy-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths}</svg></span>`;
+const benefitIcons={
+  expertise:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.1 4.25 4.7.68-3.4 3.31.8 4.68-4.2-2.21-4.2 2.21.8-4.68-3.4-3.31 4.7-.68Z"/><path d="M8.5 19.5 12 21l3.5-1.5"/></svg>',
+  services:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h6v6H4zM14 4h6v6h-6zM14 14h6v6h-6zM7 13v4a2 2 0 0 0 2 2h5M10 10h4"/></svg>',
+  design:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10zM13.5 8l3 3M4 20l3.5-3.5"/><path d="M14 20h6"/></svg>',
+  quality:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.8 2.9 8.3 7 10 4.1-1.7 7-5.2 7-10V6z"/><path d="m9 12 2 2 4-4"/></svg>'
+};
 const finalizeHtml=(html,route)=>{
   const depth=route==="/"?0:route.split("/").filter(Boolean).length;
   const baseHref=depth?"../".repeat(depth):"./";
@@ -35,12 +41,13 @@ const finalizeHtml=(html,route)=>{
   .replace(/<button class="assistant-fab"([^>]*)><span>✦<\/span> مساعدة<\/button>/g,'<button class="assistant-fab"$1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h4l4 3 4-3h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-3 10H7v-2h10v2Zm0-4H7V6h10v2Zm-4 8H7v-2h6v2Z"/></svg><span class="assistant-fab__label">مساعدة</span></button>')
   .replace(/ ر\.س/g," ريال")
   .replace(/<span class="policy-number">0([1-7])<\/span>/g,(_,number)=>`<span class="policy-icon">${policyIcons[number]}</span>`)
-  .replace(/<div class="container hero__content">[\s\S]*?<\/div><\/section><section class="category-strip/, '<div class="container hero__content"><h1>تشييد العمارة العربية</h1><strong class="hero__tagline">نصنع الجمال في كل مساحة</strong><div class="hero__services" aria-label="خدمات ومنتجات الشركة"><span>مراكن</span><span>شلالات</span><span>نوافير</span><span>أثاث</span><span>ديكور</span><span>تنسيق حدائق</span></div><div class="hero__actions"><a class="button hero__primary" href="/products/">اكتشف منتجاتنا</a><a class="button button--glass" href="/product-finder/">ساعدني أختار</a></div></div></section><section class="category-strip')
-  .replace(/<div class="benefits">[\s\S]*?<\/div><\/div><\/section><section class="whatsapp-cta">/,'<div class="benefits"><article><span>01</span><h3>خبرة واحترافية</h3><p>تنفيذ منظم يراعي تفاصيل العمل وجودة النتيجة.</p></article><article><span>02</span><h3>خدمات متكاملة</h3><p>من التصميم والتجهيز إلى تنسيق عناصر المساحة.</p></article><article><span>03</span><h3>تصاميم عصرية</h3><p>حلول متنوعة تناسب طبيعة المساحة واحتياج العميل.</p></article><article><span>04</span><h3>جودة في التنفيذ</h3><p>اهتمام بالخامات والتفاصيل في كل مرحلة.</p></article></div></div></section><section class="whatsapp-cta">')
+  .replace(/<div class="container hero__content">[\s\S]*?<\/div><\/section><section class="category-strip/, '<div class="container hero__content"><img class="hero__logo" src="/assets/images/brand/archiciva-mark-transparent.webp" width="210" height="154" alt="شعار شركة تشييد العمارة العربية"><div class="hero__copy"><h1>تشييد العمارة العربية</h1><strong class="hero__tagline">نصنع الجمال في كل مساحة</strong><div class="hero__services" aria-label="خدمات ومنتجات الشركة"><span>مراكن</span><span>شلالات</span><span>نوافير</span><span>أثاث</span><span>ديكور</span><span>تنسيق حدائق</span></div><div class="hero__actions"><a class="button hero__primary" href="/products/">اكتشف منتجاتنا</a><a class="button button--glass" href="/product-finder/">ساعدني أختار</a></div></div></div></section><section class="category-strip')
+  .replace(/<div class="section-heading"><div><span class="eyebrow">تجربة واضحة<\/span><h2>اختيار أسهل من أول نظرة<\/h2><\/div><\/div>/,'')
+  .replace(/<div class="benefits">[\s\S]*?<\/div><\/div><\/section><section class="whatsapp-cta">/,`<div class="benefits"><article><span class="benefit-icon">${benefitIcons.expertise}</span><h3>خبرة واحترافية</h3><p>تنفيذ منظم يراعي تفاصيل العمل وجودة النتيجة.</p></article><article><span class="benefit-icon">${benefitIcons.services}</span><h3>خدمات متكاملة</h3><p>من التصميم والتجهيز إلى تنسيق عناصر المساحة.</p></article><article><span class="benefit-icon">${benefitIcons.design}</span><h3>تصاميم عصرية</h3><p>حلول متنوعة تناسب طبيعة المساحة واحتياج العميل.</p></article><article><span class="benefit-icon">${benefitIcons.quality}</span><h3>جودة في التنفيذ</h3><p>اهتمام بالخامات والتفاصيل في كل مرحلة.</p></article></div></div></section><section class="whatsapp-cta">`)
   .replace(/favicon-32\.png/g,"favicon-32.png?v=20261002-7")
   .replace(/apple-touch-icon\.png/g,"apple-touch-icon.png?v=20261002-7")
   .replace(/archiciva-logo\.webp/g,"archiciva-mark-transparent.webp")
-  .replace("</head>",'<link rel="stylesheet" href="/assets/styles/overrides.css?v=20261007-10"></head>')
+  .replace("</head>",'<link rel="stylesheet" href="/assets/styles/overrides.css?v=20261007-11"></head>')
   .replace(/href="\/"/g,'href="index.html"')
   .replace(/(href|src)="\/(?!\/)/g,'$1="')
   .replace(/([", ])\/assets\//g,"$1assets/");
