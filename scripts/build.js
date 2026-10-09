@@ -47,7 +47,6 @@ const finalizeHtml=(html,route)=>{
   .replace(/favicon-32\.png/g,"favicon-32.png?v=20261002-7")
   .replace(/apple-touch-icon\.png/g,"apple-touch-icon.png?v=20261002-7")
   .replace(/archiciva-logo\.webp/g,"archiciva-mark-transparent.webp")
-  .replace("</head>",'<link rel="stylesheet" href="/assets/styles/overrides.css?v=20261007-11"></head>')
   .replace(/href="\/"/g,'href="index.html"')
   .replace(/(href|src)="\/(?!\/)/g,'$1="')
   .replace(/([", ])\/assets\//g,"$1assets/");
