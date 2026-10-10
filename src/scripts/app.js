@@ -12,11 +12,11 @@ const pagePath = (value) =>
     : value;
 const CART_KEY = "archiciva-cart-v1";
 const number = (value) =>
-  new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 0 }).format(value);
+  new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
 const money = (value) =>
   `<span class="money"><span>${number(value)}</span><img class="sar-symbol" src="${assetPath("/assets/icons/saudi-riyal-symbol.svg")}" width="14" height="16" alt="ريال سعودي"></span>`;
 const pricing = (product, quantity = 1) =>
-  `<div class="pricing pricing--compact"><strong class="pricing__current">${money(product.price * quantity)}</strong><div class="pricing__meta"><del>${money(product.originalPrice * quantity)}</del><span class="discount-badge">خصم 20%</span></div></div>`;
+  `<div class="pricing pricing--compact"><div class="pricing__current"><span class="pricing__label">بعد الخصم</span><strong>${money(product.price * quantity)}</strong></div><div class="pricing__meta"><span class="pricing__before">قبل الخصم</span><del>${money(product.originalPrice * quantity)}</del><span class="discount-badge">خصم 20%</span></div></div>`;
 const moneyText = (value) => `${number(value)} ريال سعودي`;
 const getCart = () => {
   try {

@@ -8,10 +8,10 @@ const esc = (v = "") =>
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
   );
 const money = (v) =>
-  `<span class="money"><span>${new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 0 }).format(v)}</span><img class="sar-symbol" src="/assets/icons/saudi-riyal-symbol.svg" width="14" height="16" alt="ريال سعودي"></span>`;
+  `<span class="money"><span dir="ltr">${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(v)}</span><img class="sar-symbol" src="/assets/icons/saudi-riyal-symbol.svg" width="14" height="16" alt="ريال سعودي"></span>`;
 const originalPrice = (p) => p.originalPrice || Math.round(p.price / 0.8);
 const pricing = (p) =>
-  `<div class="pricing"><strong class="price pricing__current">${money(p.price)}</strong><div class="pricing__meta"><del aria-label="السعر قبل الخصم">${money(originalPrice(p))}</del><span class="discount-badge">خصم 20%</span></div></div>`;
+  `<div class="pricing"><div class="pricing__current"><span class="pricing__label">بعد الخصم</span><strong class="price">${money(p.price)}</strong></div><div class="pricing__meta"><span class="pricing__before">قبل الخصم</span><del aria-label="السعر قبل الخصم">${money(originalPrice(p))}</del><span class="discount-badge">خصم 20%</span></div></div>`;
 const cat = (id) => categories.find((x) => x.id === id);
 const byId = (id) => products.find((x) => x.id === id);
 const abs = (p) => `${site.url}${p}`;
@@ -65,7 +65,7 @@ export function layout({
   noindex = false,
 }) {
   const canonical = abs(path);
-  const assetVersion = "20261007-12";
+  const assetVersion = "20261010-13";
   const all = [
     {
       "@context": "https://schema.org",
@@ -251,15 +251,22 @@ export function productPage(p) {
 }
 
 export function staticPage({ title, description, path, body }) {
+  const isAbout = path === "/about/";
+  const pageHeader = isAbout
+    ? `<section class="about-cover" role="img" aria-label="مقر شركة تشييد العمارة العربية"></section><section class="about-heading container"><h1>${title}</h1><p>${description}</p></section>`
+    : `<section class="page-hero container"><span class="eyebrow">ArchiCiva</span><h1>${title}</h1><p>${description}</p></section>`;
+  const aboutExtras = isAbout
+    ? `<section class="about-why" aria-labelledby="about-why-title"><div class="about-why__head"><span>ما يميزنا</span><h2 id="about-why-title">لماذا تختار تشييد العمارة؟</h2></div><div class="about-why__grid"><article><span class="about-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.3-4.5 2.3.9-5-3.6-3.5 5-.7Z"/></svg></span><h3>خبرة في المجال</h3><p>حلول مدروسة تهتم بالتفاصيل من الفكرة وحتى التنفيذ.</p></article><article><span class="about-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20c.5-4 2.8-6 7-6s6.5 2 7 6M4 7l2-2M20 7l-2-2"/></svg></span><h3>فريق متخصص</h3><p>تنسيق احترافي يجمع بين الخبرة وجودة العمل.</p></article><article><span class="about-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17 17 4l3 3L7 20H4v-3Z"/><path d="m13 8 3 3M4 4h6M7 4v6"/></svg></span><h3>تصاميم عصرية</h3><p>خيارات متنوعة تناسب المساحات الداخلية والخارجية.</p></article><article><span class="about-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 7 3v5c0 4.5-2.7 7.8-7 10-4.3-2.2-7-5.5-7-10V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><h3>جودة في التنفيذ</h3><p>اهتمام بالخامات والتفاصيل لتحقيق نتيجة متناسقة.</p></article></div></section><section class="about-contact"><div><span>ابدأ مشروعك معنا</span><h2>تواصل معنا الآن</h2><p>أرسل تفاصيل مساحتك، وسنتابع معك لاختيار الحل الأنسب.</p></div><a class="button" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent("مرحبًا، أود الاستفسار عن خدمات ومنتجات تشييد العمارة")}" target="_blank" rel="noopener">تواصل عبر واتساب</a></section>`
+    : "";
   return layout({
     title: `${title} | ArchiCiva`,
     description,
     path,
-    bodyClass: path === "/about/" ? "about-page" : "static-page",
+    bodyClass: isAbout ? "about-page" : "static-page",
     content: `${breadcrumb([
       { name: "الرئيسية", href: "/" },
       { name: title, href: path },
-    ])}<section class="page-hero container"><span class="eyebrow">ArchiCiva</span><h1>${title}</h1><p>${description}</p></section><section class="section container prose prose--wide">${body}</section>`,
+    ])}${pageHeader}<section class="section container prose prose--wide">${body}${aboutExtras}</section>`,
   });
 }
 export function cartPage() {
