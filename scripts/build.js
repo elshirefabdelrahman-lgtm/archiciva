@@ -82,6 +82,9 @@ const brandMark=()=>sharp(transparentLogo).extract({left:175,top:70,width:900,he
 jobs.push(brandMark().resize({width:300,height:220,fit:"contain"}).webp({quality:92,alphaQuality:100}).toFile(path.join(dist,"assets/images/brand/archiciva-mark-transparent.webp")));
 jobs.push(brandMark().resize({width:180,height:180,fit:"contain"}).png().toFile(path.join(dist,"assets/images/brand/apple-touch-icon.png")));
 jobs.push(brandMark().resize({width:32,height:32,fit:"contain"}).png().toFile(path.join(dist,"assets/images/brand/favicon-32.png")));
+jobs.push(sharp(path.join(root,"source-assets","brand","footer-commercial-register.png")).resize({width:160,height:160,fit:"cover"}).webp({quality:92,effort:5}).toFile(path.join(dist,"assets/images/brand/footer-commercial-register.webp")));
+jobs.push(sharp(path.join(root,"source-assets","brand","footer-vat-logo.png")).resize({width:120,withoutEnlargement:true}).webp({quality:92,effort:5}).toFile(path.join(dist,"assets/images/brand/footer-vat-logo.webp")));
+jobs.push(sharp(path.join(root,"source-assets","brand","footer-saudi-palm.png")).resize({width:160,height:160,fit:"cover"}).webp({quality:92,effort:5}).toFile(path.join(dist,"assets/images/brand/footer-saudi-palm.webp")));
 await Promise.all(jobs);
 
 write("/",homePage());
