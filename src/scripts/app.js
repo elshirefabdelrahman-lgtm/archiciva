@@ -44,13 +44,17 @@ const toast = (message) => {
   setTimeout(() => node.classList.remove("show"), 2200);
 };
 
-function addToCart(id, quantity = 1) {
+const cartItemKey = (item) => `${item.id}::${item.color || ""}`;
+
+function addToCart(id, quantity = 1, color = "") {
   const cart = getCart();
-  const existing = cart.find((item) => item.id === id);
+  const existing = cart.find(
+    (item) => item.id === id && (item.color || "") === color,
+  );
   if (existing) existing.quantity = Math.min(99, existing.quantity + quantity);
-  else cart.push({ id, quantity });
+  else cart.push({ id, quantity, ...(color ? { color } : {}) });
   saveCart(cart);
-  toast("تمت إضافة المنتج للسلة");
+  toast(color ? `تمت إضافة المنتج باللون ${color}` : "تمت إضافة المنتج للسلة");
 }
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-add-to-cart]");
@@ -58,7 +62,20 @@ document.addEventListener("click", (event) => {
   const quantity = button.hasAttribute("data-quantity-source")
     ? Number(document.querySelector("[data-product-quantity]")?.value || 1)
     : 1;
-  addToCart(button.dataset.addToCart, quantity);
+  const picker = document.querySelector("[data-color-picker]");
+  const color = document.querySelector("[data-product-color]:checked")?.value || "";
+  if (picker && !color) {
+    toast("اختر اللون المطلوب أولًا");
+    picker.classList.add("product-colors--attention");
+    picker.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  picker?.classList.remove("product-colors--attention");
+  addToCart(button.dataset.addToCart, quantity, color);
+});
+document.addEventListener("change", (event) => {
+  if (event.target.matches("[data-product-color]"))
+    document.querySelector("[data-color-picker]")?.classList.remove("product-colors--attention");
 });
 
 const menuButton = document.querySelector(".menu-toggle");
@@ -170,7 +187,7 @@ function renderCart() {
   container.innerHTML = rows
     .map(
       ({ entry, product }) =>
-        `<article class="cart-item"><img src="${product.image}" width="90" height="95" alt=""><div><h3><a href="${pagePath(`/products/${product.slug}/`)}">${product.name}</a></h3>${pricing(product)}<div class="cart-item__controls"><button type="button" data-cart-decrease="${product.id}" aria-label="تقليل الكمية">−</button><b>${entry.quantity}</b><button type="button" data-cart-increase="${product.id}" aria-label="زيادة الكمية">+</button><button class="remove-button" type="button" data-cart-remove="${product.id}">حذف</button></div></div><div class="cart-item__total"><small>إجمالي المنتج</small>${pricing(product, entry.quantity)}</div></article>`,
+        `<article class="cart-item"><img src="${product.image}" width="90" height="95" alt=""><div><h3><a href="${pagePath(`/products/${product.slug}/`)}">${product.name}</a></h3>${entry.color ? `<p class="cart-item__color">اللون: <strong>${entry.color}</strong></p>` : ""}${pricing(product)}<div class="cart-item__controls"><button type="button" data-cart-decrease="${encodeURIComponent(cartItemKey(entry))}" aria-label="تقليل الكمية">−</button><b>${entry.quantity}</b><button type="button" data-cart-increase="${encodeURIComponent(cartItemKey(entry))}" aria-label="زيادة الكمية">+</button><button class="remove-button" type="button" data-cart-remove="${encodeURIComponent(cartItemKey(entry))}">حذف</button></div></div><div class="cart-item__total"><small>إجمالي المنتج</small>${pricing(product, entry.quantity)}</div></article>`,
     )
     .join("");
   const total = rows.reduce(
@@ -187,11 +204,12 @@ document.addEventListener("click", (event) => {
   );
   if (!button) return;
   const cart = getCart();
-  const id =
+  const key = decodeURIComponent(
     button.getAttribute("data-cart-increase") ||
     button.getAttribute("data-cart-decrease") ||
-    button.getAttribute("data-cart-remove");
-  const item = cart.find((entry) => entry.id === id);
+    button.getAttribute("data-cart-remove"),
+  );
+  const item = cart.find((entry) => cartItemKey(entry) === key);
   if (!item) return;
   if (button.hasAttribute("data-cart-increase"))
     item.quantity = Math.min(99, item.quantity + 1);
@@ -199,7 +217,7 @@ document.addEventListener("click", (event) => {
     item.quantity = Math.max(1, item.quantity - 1);
   saveCart(
     button.hasAttribute("data-cart-remove")
-      ? cart.filter((entry) => entry.id !== id)
+      ? cart.filter((entry) => cartItemKey(entry) !== key)
       : cart,
   );
 });
@@ -215,7 +233,7 @@ document
     const form = new FormData(event.currentTarget);
     const lines = cart.map((entry, index) => {
       const product = products.find((item) => item.id === entry.id);
-      return `${index + 1}. المنتج: ${product.name}\nالكمية: ${entry.quantity}\nالسعر: ${moneyText(product.price)}\nالإجمالي: ${moneyText(product.price * entry.quantity)}`;
+      return `${index + 1}. المنتج: ${product.name}\n${entry.color ? `اللون: ${entry.color}\n` : ""}الكمية: ${entry.quantity}\nالسعر: ${moneyText(product.price)}\nالإجمالي: ${moneyText(product.price * entry.quantity)}`;
     });
     const total = cart.reduce((sum, entry) => {
       const product = products.find((item) => item.id === entry.id);

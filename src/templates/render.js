@@ -28,6 +28,13 @@ const dims = (p) => {
     .map(([k, v]) => `${l[k]}: ${v} سم`)
     .join(" — ");
 };
+const colorHex = {"رمادي":"#9aa0a0","جرانيتي":"#55585a","ترابي":"#9d8264","بيج":"#dcc59f","سكري":"#eee5c8","أبيض":"#ffffff","أسود":"#111111"};
+const colorPicker = (p) => p.availableColors?.length
+  ? `<fieldset class="product-colors" id="choose-color" data-color-picker><legend>اختر اللون</legend><div class="product-colors__options">${p.availableColors.map((color) => `<label class="color-option"><input type="radio" name="product-color" value="${esc(color)}" data-product-color><span class="color-option__swatch" style="--swatch:${colorHex[color] || "#ddd"}" aria-hidden="true"></span><span>${esc(color)}</span></label>`).join("")}</div><small>اختر اللون المطلوب قبل الإضافة للسلة.</small></fieldset>`
+  : "";
+const productStory = (p) => p.isNewWaterfall
+  ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p class="waterfall-story__tax">السعر الحالي ${money(p.price)} شامل الضريبة، وكان ${money(originalPrice(p))} قبل خصم 20%.</p><h3>المميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>أضف لمشروعك لمسة مختلفة</h3><p>ارتقِ بجمال حديقتك أو مساحتك الخارجية مع شلال انسيابي فاخر من شركة تشييد العمارة العربية. الحركة والصوت والإضاءة تمنح المكان تجربة أكثر هدوءًا وفخامة وتزيد من القيمة الجمالية للمساحة.</p><p class="waterfall-story__signature"><strong>تشييد العمارة العربية — نصنع التفاصيل التي تصنع الفرق.</strong><br>اطلب الآن واحصل على شلال انسيابي يليق بتصميم مشروعك.</p></div>`
+  : `<p>${esc(p.description)}</p>${p.features.length ? `<h3>السمات الظاهرة</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}`;
 const whatsappIcon = `<svg class="whatsapp-icon" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 3a12.7 12.7 0 0 0-11 19.1L3.4 29l7-1.8A12.8 12.8 0 1 0 16 3Zm0 23.2c-2 0-3.8-.5-5.4-1.5l-.4-.2-4.1 1.1 1.1-4-.3-.4A10.4 10.4 0 1 1 16 26.2Zm5.7-7.8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1-2-.9-3.3-1.8-4.6-4-.3-.5.3-.5.9-1.7.1-.2.1-.4 0-.6l-1-2.5c-.3-.6-.6-.5-.8-.5h-.7c-.3 0-.7.1-1 .5-.3.4-1.3 1.3-1.3 3.1s1.4 3.6 1.5 3.8c.2.2 2.7 4.1 6.5 5.7 2.4 1 3.4 1.1 4.6.9.8-.1 1.9-.8 2.1-1.5.3-.7.3-1.4.2-1.5-.1-.2-.4-.3-.7-.4Z"/></svg>`;
 
 const cartIcon = `<svg class="cart-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 9.1a2 2 0 0 0 2 1.5h7.8a2 2 0 0 0 1.9-1.4L21 7H7M10 19a1.35 1.35 0 1 1-2.7 0 1.35 1.35 0 0 1 2.7 0Zm8 0a1.35 1.35 0 1 1-2.7 0 1.35 1.35 0 0 1 2.7 0Z"/></svg>`;
@@ -52,7 +59,10 @@ export function breadcrumb(items) {
 
 export function productCard(p) {
   const c = cat(p.subcategory);
-  return `<article class="product-card" data-product-card data-name="${esc([p.name, p.shortDescription, p.material, p.color, ...p.tags].filter(Boolean).join(" "))}" data-category="${p.subcategory}" data-price="${p.price}" data-size="${p.size}" data-color="${esc(p.color)}"><a class="product-card__image" href="/products/${p.slug}/" aria-label="عرض ${esc(p.name)}"><img src="${image(p, 480)}" srcset="${image(p, 480)} 480w, ${image(p, 800)} 800w" sizes="(max-width:640px) 50vw,(max-width:1024px) 33vw,25vw" width="480" height="524" loading="lazy" decoding="async" alt="${esc(p.alt)}"></a><div class="product-card__body"><span class="eyebrow">${esc(c?.shortName || "منتج")}</span><h3><a href="/products/${p.slug}/">${esc(p.name)}</a></h3>${pricing(p)}<div class="product-card__actions"><a class="text-link" href="/products/${p.slug}/">عرض المنتج</a><button class="button button--small" type="button" data-add-to-cart="${p.id}">أضف للسلة</button></div></div></article>`;
+  const cardAction = p.availableColors?.length
+    ? `<a class="button button--small" href="/products/${p.slug}/#choose-color">اختر اللون</a>`
+    : `<button class="button button--small" type="button" data-add-to-cart="${p.id}">أضف للسلة</button>`;
+  return `<article class="product-card" data-product-card data-name="${esc([p.name, p.shortDescription, p.material, p.color, ...p.tags].filter(Boolean).join(" "))}" data-category="${p.subcategory}" data-price="${p.price}" data-size="${p.size}" data-color="${esc(p.color)}"><a class="product-card__image" href="/products/${p.slug}/" aria-label="عرض ${esc(p.name)}"><img src="${image(p, 480)}" srcset="${image(p, 480)} 480w, ${image(p, 800)} 800w" sizes="(max-width:640px) 50vw,(max-width:1024px) 33vw,25vw" width="480" height="524" loading="lazy" decoding="async" alt="${esc(p.alt)}"></a><div class="product-card__body"><span class="eyebrow">${esc(c?.shortName || "منتج")}</span><h3><a href="/products/${p.slug}/">${esc(p.name)}</a></h3>${pricing(p)}<div class="product-card__actions"><a class="text-link" href="/products/${p.slug}/">عرض المنتج</a>${cardAction}</div></div></article>`;
 }
 
 export function layout({
@@ -65,7 +75,7 @@ export function layout({
   noindex = false,
 }) {
   const canonical = abs(path);
-  const assetVersion = "20261013-15";
+  const assetVersion = "20261013-16";
   const all = [
     {
       "@context": "https://schema.org",
@@ -92,6 +102,7 @@ export function layout({
       uses,
       tags,
       shortDescription,
+      availableColors,
     }) => ({
       id,
       name,
@@ -107,6 +118,7 @@ export function layout({
       uses,
       tags,
       shortDescription,
+      availableColors,
     }),
   );
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}">${noindex ? '<meta name="robots" content="noindex,follow">' : ""}<link rel="canonical" href="${canonical}"><meta name="theme-color" content="#18271f"><meta property="og:type" content="website"><meta property="og:locale" content="ar_SA"><meta property="og:site_name" content="ArchiCiva"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${abs("/assets/images/hero/archiciva-hero-1600.webp")}"><meta name="twitter:card" content="summary_large_image"><link rel="icon" type="image/png" sizes="32x32" href="/assets/images/brand/favicon-32.png"><link rel="apple-touch-icon" href="/assets/images/brand/apple-touch-icon.png"><link rel="preload" href="/assets/styles/main.css?v=${assetVersion}" as="style"><link rel="stylesheet" href="/assets/styles/main.css?v=${assetVersion}"><link rel="stylesheet" href="/assets/styles/overrides.css?v=${assetVersion}">${all.map((x) => `<script type="application/ld+json">${JSON.stringify(x)}</script>`).join("")}</head><body class="${bodyClass}"><a class="skip-link" href="#main">انتقل إلى المحتوى</a>${nav}<main id="main">${content}</main>${footer}<button class="assistant-fab" type="button" data-assistant-open aria-label="فتح مساعد الاختيار"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h4l4 3 4-3h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-3 10H7v-2h10v2Zm0-4H7V6h10v2Zm-4 8H7v-2h6v2Z"/></svg><span class="assistant-fab__label">مساعدة</span></button><div class="assistant-shell" data-assistant hidden></div><div class="toast" data-toast role="status" aria-live="polite"></div><script>window.__ARCHICIVA_PRODUCTS__=${JSON.stringify(clientProducts)};window.__ARCHICIVA_CONFIG__=${JSON.stringify({ whatsapp: site.whatsapp })};</script><script type="module" src="/assets/scripts/app.js?v=${assetVersion}"></script></body></html>`;
@@ -222,6 +234,13 @@ export function productPage(p) {
     ["الحجم التقريبي", p.size || "غير محدد"],
     ["الأبعاد المتوفرة", dims(p) || "تحتاج إلى تأكيد"],
   ];
+  if (p.isNewWaterfall) {
+    specs.push(
+      ["الإضاءة", "LED حسب الطلب"],
+      ["الاستخدام", "داخلي وخارجي"],
+      ["السعر", "شامل الضريبة"],
+    );
+  }
   const schema = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -236,7 +255,7 @@ export function productPage(p) {
     { name: "المنتجات", href: "/products/" },
     { name: c?.name || "التصنيف", href: `/${c?.slug || "products"}/` },
     { name: p.name, href: `/products/${p.slug}/` },
-  ])}<section class="product-detail container"><div class="product-gallery"><div class="product-gallery__main"><img src="${image(p, 800)}" srcset="${image(p, 480)} 480w,${image(p, 800)} 800w" sizes="(max-width:800px) 100vw,50vw" width="800" height="874" alt="${esc(p.alt)}"></div></div><div class="product-info"><span class="eyebrow">${esc(c?.name)}</span><h1>${esc(p.name)}</h1><p class="product-code">${p.id}</p><strong class="product-price">${money(p.price)}</strong><p class="lead">${esc(p.shortDescription)}</p>${dims(p) ? `<p class="dimension-pill">${esc(dims(p))}</p>` : ""}<div class="quantity-add"><label>الكمية<input type="number" min="1" max="99" value="1" data-product-quantity></label><button class="button button--wide" type="button" data-add-to-cart="${p.id}" data-quantity-source>أضف للسلة</button></div><a class="button button--outline button--wide" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent(`مرحبًا، أود الاستفسار عن ${p.name} (${p.id})`)}" target="_blank" rel="noopener">${whatsappIcon}<span>استفسار</span></a><ul class="product-assurances"><li>مراجعة تفاصيل المنتج قبل اعتماد الطلب</li><li>إمكانية إضافة أكثر من منتج للسلة</li><li>إرسال ملخص مرتب عبر واتساب</li></ul></div></section><section class="product-tabs container"><article><span class="eyebrow">عن المنتج</span><h2>تفاصيل التصميم</h2><p>${esc(p.description)}</p>${p.features.length ? `<h3>السمات الظاهرة</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</article><article><span class="eyebrow">المواصفات</span><h2>المعلومات المتوفرة</h2><dl>${specs.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></article></section>${related.length ? `<section class="section container"><div class="section-heading"><div><span class="eyebrow">قد يناسبك أيضًا</span><h2>منتجات مرتبطة</h2></div><a class="text-link" href="/${c.slug}/">عرض التصنيف</a></div><div class="product-grid">${related.map(productCard).join("")}</div></section>` : ""}`;
+  ])}<section class="product-detail container"><div class="product-gallery"><div class="product-gallery__main"><img src="${image(p, 800)}" srcset="${image(p, 480)} 480w,${image(p, 800)} 800w" sizes="(max-width:800px) 100vw,50vw" width="800" height="874" alt="${esc(p.alt)}"></div></div><div class="product-info"><span class="eyebrow">${esc(c?.name)}</span><h1>${esc(p.name)}</h1><p class="product-code">${p.id}</p><strong class="product-price">${money(p.price)}</strong><p class="lead">${esc(p.shortDescription)}</p>${dims(p) ? `<p class="dimension-pill">${esc(dims(p))}</p>` : ""}${colorPicker(p)}<div class="quantity-add"><label>الكمية<input type="number" min="1" max="99" value="1" data-product-quantity></label><button class="button button--wide" type="button" data-add-to-cart="${p.id}" data-quantity-source>أضف للسلة</button></div><a class="button button--outline button--wide" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent(`مرحبًا، أود الاستفسار عن ${p.name} (${p.id})`)}" target="_blank" rel="noopener">${whatsappIcon}<span>استفسار</span></a><ul class="product-assurances"><li>مراجعة تفاصيل المنتج واللون قبل اعتماد الطلب</li><li>إمكانية إضافة أكثر من منتج للسلة</li><li>إرسال ملخص مرتب عبر واتساب</li></ul></div></section><section class="product-tabs container"><article><span class="eyebrow">عن المنتج</span><h2>تفاصيل التصميم</h2>${productStory(p)}</article><article><span class="eyebrow">المواصفات</span><h2>المعلومات المتوفرة</h2><dl>${specs.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></article></section>${related.length ? `<section class="section container"><div class="section-heading"><div><span class="eyebrow">قد يناسبك أيضًا</span><h2>منتجات مرتبطة</h2></div><a class="text-link" href="/${c.slug}/">عرض التصنيف</a></div><div class="product-grid">${related.map(productCard).join("")}</div></section>` : ""}`;
   return layout({
     title: `${p.seoTitle || p.name} | ArchiCiva`,
     description: p.seoDescription || p.shortDescription,
