@@ -74,7 +74,7 @@ for(const p of products){
     jobs.push(sharp(source).resize({width,height,fit:"contain",background:"#ffffff"}).webp({quality:82,effort:5}).toFile(target));
   }
 }
-for(const width of [960,1600]){const target=path.join(dist,"assets/images/hero",`archiciva-hero-${width}.webp`);ensure(path.dirname(target));jobs.push(sharp(path.join(root,"source-assets","brand","cover.png")).resize({width,withoutEnlargement:true}).webp({quality:84,effort:5}).toFile(target));}
+for(const width of [960,1600]){const target=path.join(dist,"assets/images/hero",`archiciva-hero-villa-${width}.webp`);ensure(path.dirname(target));jobs.push(sharp(path.join(root,"source-assets","brand","cover.png")).resize({width,withoutEnlargement:true}).webp({quality:86,effort:5}).toFile(target));}
 for(const width of [960,1600]){const target=path.join(dist,"assets/images/hero",`about-office-${width}.webp`);ensure(path.dirname(target));jobs.push(sharp(path.join(root,"source-assets","brand","about-office-reception.jpg")).resize({width,withoutEnlargement:true}).webp({quality:84,effort:5}).toFile(target));}
 ensure(path.join(dist,"assets/images/brand"));
 const transparentLogo=path.join(root,"source-assets","brand","logo-transparent.png");
