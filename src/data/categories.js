@@ -7,7 +7,7 @@ export const categories = [
   { id: "rectangular", parent: "planters", name: "أحواض مستطيلة", shortName: "أحواض مستطيلة", slug: "planters/rectangular", sourceFolder: "احواض مستطيلة", description: "أحواض مستطيلة مناسبة للتنسيق الخطي والفواصل النباتية في المساحات الواسعة.", icon: "▭" },
   { id: "fountains", parent: "water-features", name: "نوافير", shortName: "نوافير", slug: "water-features/fountains", sourceFolder: "نوافير", description: "نوافير ديكورية كلاسيكية وحديثة؛ تفاصيل التشغيل والمضخات تحتاج إلى تأكيد قبل الطلب.", icon: "♒" },
   { id: "waterfalls", parent: "water-features", name: "شلالات", shortName: "شلالات", slug: "water-features/waterfalls", sourceFolder: "شلالات", description: "شلالات ديكورية وجدارية لإضافة عنصر مائي بصري إلى المداخل والحدائق.", icon: "≋" },
-  { id: "decor", parent: "decor", name: "ديكور وأثاث", shortName: "ديكور وأثاث", slug: "decor", sourceFolder: "اثاث", description: "قطع ديكور وحوامل بتصاميم متنوعة. الوظيفة والخامة الدقيقة لكل قطعة تحتاج إلى اعتماد.", icon: "◇" }
+  { id: "fiber-decor", parent: "planters", name: "منتجات ديكورية من الفايبر", shortName: "منتجات ديكورية من الفايبر", slug: "planters/fiber-decor", sourceFolder: "اثاث", description: "منتجات وحوامل ومجسمات ديكورية مصنوعة من الفايبر جلاس لتنسيق المداخل والمساحات الداخلية والخارجية.", icon: "◇" }
 ];
 
 export const categoryGroups = [
