@@ -28,7 +28,7 @@ const dims = (p) => {
     .map(([k, v]) => `${l[k]}: ${v} سم`)
     .join(" — ");
 };
-const colorHex = {"رمادي":"#9aa0a0","جرانيتي":"#55585a","ترابي":"#9d8264","بيج":"#dcc59f","سكري":"#eee5c8","أبيض":"#ffffff","أسود":"#111111"};
+const colorHex = {"رمادي":"#9aa0a0","جرانيتي":"#55585a","ترابي":"#9d8264","بيج":"#dcc59f","سكري":"#eee5c8","طبيعي":"#c79b61","عسلي":"#b8752a","بني":"#74462c","بني داكن":"#3f2a22","أبيض":"#ffffff","أسود":"#111111"};
 const colorPicker = (p) => p.availableColors?.length
   ? `<fieldset class="product-colors" id="choose-color" data-color-picker><legend>اختر اللون</legend><div class="product-colors__options">${p.availableColors.map((color) => `<label class="color-option"><input type="radio" name="product-color" value="${esc(color)}" data-product-color><span class="color-option__swatch" style="--swatch:${colorHex[color] || "#ddd"}" aria-hidden="true"></span><span>${esc(color)}</span></label>`).join("")}</div><small>اختر اللون المطلوب قبل الإضافة للسلة.</small></fieldset>`
   : "";
@@ -36,6 +36,8 @@ const productStory = (p) => p.isNewWaterfall
   ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p class="waterfall-story__tax">السعر الحالي ${money(p.price)} شامل الضريبة، وكان ${money(originalPrice(p))} قبل خصم 20%.</p><h3>المميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>أضف لمشروعك لمسة مختلفة</h3><p>ارتقِ بجمال حديقتك أو مساحتك الخارجية مع شلال انسيابي فاخر من شركة تشييد العمارة العربية. الحركة والصوت والإضاءة تمنح المكان تجربة أكثر هدوءًا وفخامة وتزيد من القيمة الجمالية للمساحة.</p><p class="waterfall-story__signature"><strong>تشييد العمارة العربية — نصنع التفاصيل التي تصنع الفرق.</strong><br>اطلب الآن واحصل على شلال انسيابي يليق بتصميم مشروعك.</p></div>`
   : p.isNewFountain
   ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p class="waterfall-story__tax">السعر الحالي ${money(p.price)} شامل الضريبة، وكان ${money(originalPrice(p))} قبل خصم 20%.</p><h3>التفاصيل والمميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>واحة استرخاء متكاملة</h3><p>حوّل حديقتك أو فناء منزلك إلى مساحة أكثر هدوءًا وأناقة؛ فحركة المياه وصوتها العذب يضيفان لمسة جمالية مميزة مع تصميم عملي متين يناسب مشروعك.</p><p class="waterfall-story__signature"><strong>تشييد العمارة العربية — نصنع التفاصيل التي تصنع الفرق.</strong><br>اختر اللون، وأضف ملاحظات التخصيص، وسيتواصل معك فريقنا لمراجعة الطلب.</p></div>`
+  : p.isNewRattan
+  ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p class="waterfall-story__tax">السعر الحالي ${money(p.price)} شامل الضريبة، وكان ${money(originalPrice(p))} قبل خصم 20%.</p><h3>المميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>أضف لمشروعك لمسة مختلفة</h3><p>المركن ليس مجرد عنصر ديكوري، بل قطعة طبيعية تضيف الدفء والهدوء إلى المكان، وتمنح المساحة حضورًا أكثر فخامة وترفع من قيمتها الجمالية.</p><p class="waterfall-story__signature"><strong>تشييد العمارة العربية — نصنع التفاصيل التي تصنع الفرق.</strong><br>اطلب الآن واحصل على مركن يليق بتصميم مشروعك.</p></div>`
   : `<p>${esc(p.description)}</p>${p.features.length ? `<h3>السمات الظاهرة</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}`;
 const whatsappIcon = `<svg class="whatsapp-icon" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 3a12.7 12.7 0 0 0-11 19.1L3.4 29l7-1.8A12.8 12.8 0 1 0 16 3Zm0 23.2c-2 0-3.8-.5-5.4-1.5l-.4-.2-4.1 1.1 1.1-4-.3-.4A10.4 10.4 0 1 1 16 26.2Zm5.7-7.8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1-2-.9-3.3-1.8-4.6-4-.3-.5.3-.5.9-1.7.1-.2.1-.4 0-.6l-1-2.5c-.3-.6-.6-.5-.8-.5h-.7c-.3 0-.7.1-1 .5-.3.4-1.3 1.3-1.3 3.1s1.4 3.6 1.5 3.8c.2.2 2.7 4.1 6.5 5.7 2.4 1 3.4 1.1 4.6.9.8-.1 1.9-.8 2.1-1.5.3-.7.3-1.4.2-1.5-.1-.2-.4-.3-.7-.4Z"/></svg>`;
 
@@ -237,7 +239,7 @@ export function productPage(p) {
     ["الحجم التقريبي", p.size || "غير محدد"],
     ["الأبعاد المتوفرة", dims(p) || "تحتاج إلى تأكيد"],
   ];
-  if (p.isNewWaterfall || p.isNewFountain) {
+  if (p.isNewWaterfall || p.isNewFountain || p.isNewRattan) {
     specs.push(
       ["الإضاءة", "LED حسب الطلب"],
       ["الاستخدام", "داخلي وخارجي"],
