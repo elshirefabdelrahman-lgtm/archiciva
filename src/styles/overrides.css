@@ -1,4 +1,5 @@
 /* Final interface refinements. */
+.product-tax-note{display:block;margin-top:-14px;margin-bottom:14px;color:#68746c;font-size:.8rem;font-weight:550}
 @font-face{font-family:"Alexandria";src:url("../fonts/alexandria-arabic.woff2") format("woff2");font-style:normal;font-weight:100 900;font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+FE76-FEFC}
 @font-face{font-family:"Alexandria";src:url("../fonts/alexandria-latin.woff2") format("woff2");font-style:normal;font-weight:100 900;font-display:swap;unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+2122}
 html{font-family:"Alexandria","Segoe UI",Tahoma,Arial,sans-serif}body,button,input,select,textarea{font-family:inherit}.hero h1,.page-hero h1,.section-heading h2,.finder-band h2,.whatsapp-cta h2{letter-spacing:-.035em;font-weight:720}
