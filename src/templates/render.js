@@ -40,6 +40,8 @@ const productStory = (p) => p.isNewWaterfall
   ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p class="waterfall-story__tax">السعر الحالي ${money(p.price)} شامل الضريبة، وكان ${money(originalPrice(p))} قبل خصم 20%.</p><h3>المميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>أضف لمشروعك لمسة مختلفة</h3><p>المركن ليس مجرد عنصر ديكوري، بل قطعة طبيعية تضيف الدفء والهدوء إلى المكان، وتمنح المساحة حضورًا أكثر فخامة وترفع من قيمتها الجمالية.</p><p class="waterfall-story__signature"><strong>تشييد العمارة العربية — نصنع التفاصيل التي تصنع الفرق.</strong><br>اطلب الآن واحصل على مركن يليق بتصميم مشروعك.</p></div>`
   : p.isNewRoundPlanter
   ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p>${esc(p.secondaryDescription)}</p><p class="waterfall-story__tax">السعر: ${money(p.price)} شامل الضريبة.</p><h3>المميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>الاستخدامات المناسبة</h3><p>${p.uses.map(esc).join("، ")}.</p><p class="waterfall-story__signature"><strong>شركة تشييد العمارة</strong><br>حلول جمالية وعملية تضيف قيمة إلى المساحات وتنسجم مع مختلف التصاميم المعمارية.</p></div>`
+  : p.isNewOvalPlanter
+  ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p>${esc(p.secondaryDescription)}</p><p class="waterfall-story__tax">السعر: ${money(p.price)} شامل الضريبة.</p><h3>المميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>الاستخدامات المناسبة</h3><p>${p.uses.map(esc).join("، ")}.</p><p class="waterfall-story__signature"><strong>شركة تشييد العمارة</strong><br>حلول جمالية وعملية تضيف قيمة إلى المساحات وتنسجم مع مختلف التصاميم المعمارية.</p></div>`
   : `<p>${esc(p.description)}</p>${p.features.length ? `<h3>السمات الظاهرة</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}`;
 const whatsappIcon = `<svg class="whatsapp-icon" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 3a12.7 12.7 0 0 0-11 19.1L3.4 29l7-1.8A12.8 12.8 0 1 0 16 3Zm0 23.2c-2 0-3.8-.5-5.4-1.5l-.4-.2-4.1 1.1 1.1-4-.3-.4A10.4 10.4 0 1 1 16 26.2Zm5.7-7.8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1-2-.9-3.3-1.8-4.6-4-.3-.5.3-.5.9-1.7.1-.2.1-.4 0-.6l-1-2.5c-.3-.6-.6-.5-.8-.5h-.7c-.3 0-.7.1-1 .5-.3.4-1.3 1.3-1.3 3.1s1.4 3.6 1.5 3.8c.2.2 2.7 4.1 6.5 5.7 2.4 1 3.4 1.1 4.6.9.8-.1 1.9-.8 2.1-1.5.3-.7.3-1.4.2-1.5-.1-.2-.4-.3-.7-.4Z"/></svg>`;
 
@@ -82,7 +84,7 @@ export function layout({
   noindex = false,
 }) {
   const canonical = abs(path);
-  const assetVersion = "20261018-25";
+  const assetVersion = "20261019-26";
   const all = [
     {
       "@context": "https://schema.org",
@@ -241,7 +243,7 @@ export function productPage(p) {
     ["الحجم التقريبي", p.size || "غير محدد"],
     ["الأبعاد المتوفرة", dims(p) || "تحتاج إلى تأكيد"],
   ];
-  if (p.isNewWaterfall || p.isNewFountain || p.isNewRattan) {
+  if (p.isNewWaterfall || p.isNewFountain || p.isNewRattan || p.isNewRoundPlanter || p.isNewOvalPlanter) {
     specs.push(
       ["الإضاءة", "LED حسب الطلب"],
       ["الاستخدام", "داخلي وخارجي"],
