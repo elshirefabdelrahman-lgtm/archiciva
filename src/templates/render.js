@@ -84,7 +84,7 @@ export function layout({
   noindex = false,
 }) {
   const canonical = abs(path);
-  const assetVersion = "20261019-26";
+  const assetVersion = "20261020-27";
   const all = [
     {
       "@context": "https://schema.org",
