@@ -84,6 +84,44 @@ menuButton?.addEventListener("click", () => {
   const open = nav.classList.toggle("open");
   menuButton.setAttribute("aria-expanded", String(open));
 });
+
+const backToTop = document.querySelector("[data-back-to-top]");
+const updateBackToTop = () => backToTop?.classList.toggle("is-visible", window.scrollY > 650);
+window.addEventListener("scroll", updateBackToTop, { passive: true });
+backToTop?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+updateBackToTop();
+
+function setupAutoCarousels() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.querySelectorAll("[data-auto-carousel]").forEach((carousel) => {
+    const cards = [...carousel.children];
+    if (cards.length < 3) return;
+    let index = 0;
+    let paused = false;
+    let timer;
+    const move = () => {
+      if (paused) return;
+      const cardWidth = cards[0].getBoundingClientRect().width;
+      const visible = Math.max(1, Math.round(carousel.clientWidth / cardWidth));
+      index = index >= cards.length - visible ? 0 : index + 1;
+      carousel.scrollTo({ left: cards[index].offsetLeft, behavior: "smooth" });
+    };
+    const start = () => {
+      clearInterval(timer);
+      timer = setInterval(move, 3200);
+    };
+    const pause = () => { paused = true; };
+    const resume = () => { paused = false; start(); };
+    carousel.addEventListener("pointerenter", pause);
+    carousel.addEventListener("pointerleave", resume);
+    carousel.addEventListener("touchstart", pause, { passive: true });
+    carousel.addEventListener("touchend", resume, { passive: true });
+    carousel.addEventListener("focusin", pause);
+    carousel.addEventListener("focusout", resume);
+    start();
+  });
+}
+setupAutoCarousels();
 const searchPanel = document.querySelector("[data-search-panel]");
 document
   .querySelector("[data-search-toggle]")
