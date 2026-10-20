@@ -38,7 +38,7 @@ const productStory = (p) => p.isNewWaterfall
   ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p class="waterfall-story__tax">السعر الحالي ${money(p.price)} شامل الضريبة، وكان ${money(originalPrice(p))} قبل خصم 20%.</p><h3>التفاصيل والمميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>واحة استرخاء متكاملة</h3><p>حوّل حديقتك أو فناء منزلك إلى مساحة أكثر هدوءًا وأناقة؛ فحركة المياه وصوتها العذب يضيفان لمسة جمالية مميزة مع تصميم عملي متين يناسب مشروعك.</p><p class="waterfall-story__signature"><strong>تشييد العمارة العربية — نصنع التفاصيل التي تصنع الفرق.</strong><br>اختر اللون، وأضف ملاحظات التخصيص، وسيتواصل معك فريقنا لمراجعة الطلب.</p></div>`
   : p.isNewRattan
   ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p class="waterfall-story__tax">السعر الحالي ${money(p.price)} شامل الضريبة، وكان ${money(originalPrice(p))} قبل خصم 20%.</p><h3>المميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>أضف لمشروعك لمسة مختلفة</h3><p>المركن ليس مجرد عنصر ديكوري، بل قطعة طبيعية تضيف الدفء والهدوء إلى المكان، وتمنح المساحة حضورًا أكثر فخامة وترفع من قيمتها الجمالية.</p><p class="waterfall-story__signature"><strong>تشييد العمارة العربية — نصنع التفاصيل التي تصنع الفرق.</strong><br>اطلب الآن واحصل على مركن يليق بتصميم مشروعك.</p></div>`
-  : p.isNewRoundPlanter
+  : p.isNewRoundPlanter || p.isNewSphericalPlanter
   ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p>${esc(p.secondaryDescription)}</p><p class="waterfall-story__tax">السعر: ${money(p.price)} شامل الضريبة.</p><h3>المميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>الاستخدامات المناسبة</h3><p>${p.uses.map(esc).join("، ")}.</p><p class="waterfall-story__signature"><strong>شركة تشييد العمارة</strong><br>حلول جمالية وعملية تضيف قيمة إلى المساحات وتنسجم مع مختلف التصاميم المعمارية.</p></div>`
   : p.isNewOvalPlanter
   ? `<div class="waterfall-story"><p>${esc(p.description)}</p><p>${esc(p.secondaryDescription)}</p><p class="waterfall-story__tax">السعر: ${money(p.price)} شامل الضريبة.</p><h3>المميزات</h3><ul>${p.features.map((x) => `<li>${esc(x)}</li>`).join("")}</ul><h3>الاستخدامات المناسبة</h3><p>${p.uses.map(esc).join("، ")}.</p><p class="waterfall-story__signature"><strong>شركة تشييد العمارة</strong><br>حلول جمالية وعملية تضيف قيمة إلى المساحات وتنسجم مع مختلف التصاميم المعمارية.</p></div>`
@@ -84,7 +84,7 @@ export function layout({
   noindex = false,
 }) {
   const canonical = abs(path);
-  const assetVersion = "20261020-27";
+  const assetVersion = "20261020-28";
   const all = [
     {
       "@context": "https://schema.org",
@@ -243,7 +243,12 @@ export function productPage(p) {
     ["الحجم التقريبي", p.size || "غير محدد"],
     ["الأبعاد المتوفرة", dims(p) || "تحتاج إلى تأكيد"],
   ];
-  if (p.isNewWaterfall || p.isNewFountain || p.isNewRattan || p.isNewRoundPlanter || p.isNewOvalPlanter) {
+  if (p.isNewSphericalPlanter) {
+    specs.push(
+      ["الاستخدام", "داخلي وخارجي"],
+      ["السعر", "شامل الضريبة"],
+    );
+  } else if (p.isNewWaterfall || p.isNewFountain || p.isNewRattan || p.isNewRoundPlanter || p.isNewOvalPlanter) {
     specs.push(
       ["الإضاءة", "LED حسب الطلب"],
       ["الاستخدام", "داخلي وخارجي"],
@@ -264,7 +269,7 @@ export function productPage(p) {
     { name: "المنتجات", href: "/products/" },
     { name: c?.name || "التصنيف", href: `/${c?.slug || "products"}/` },
     { name: p.name, href: `/products/${p.slug}/` },
-  ])}<section class="product-detail container"><div class="product-gallery"><div class="product-gallery__main"><img src="${image(p, 800)}" srcset="${image(p, 480)} 480w,${image(p, 800)} 800w" sizes="(max-width:800px) 100vw,50vw" width="800" height="874" alt="${esc(p.alt)}"></div></div><div class="product-info"><span class="eyebrow">${esc(c?.name)}</span><h1>${esc(p.name)}</h1><p class="product-code">${p.id}</p><strong class="product-price">${money(p.price)}</strong>${p.isNewRoundPlanter ? `<small class="product-tax-note">شامل الضريبة</small>` : ""}<p class="lead">${esc(p.shortDescription)}</p>${dims(p) ? `<p class="dimension-pill">${esc(dims(p))}</p>` : ""}${colorPicker(p)}<div class="quantity-add"><label>الكمية<input type="number" min="1" max="99" value="1" data-product-quantity></label><button class="button button--wide" type="button" data-add-to-cart="${p.id}" data-quantity-source>أضف للسلة</button></div><a class="button button--outline button--wide" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent(`مرحبًا، أود الاستفسار عن ${p.name} (${p.id})`)}" target="_blank" rel="noopener">${whatsappIcon}<span>استفسار</span></a><ul class="product-assurances"><li>مراجعة تفاصيل المنتج واللون قبل اعتماد الطلب</li><li>إمكانية إضافة أكثر من منتج للسلة</li><li>إرسال ملخص مرتب عبر واتساب</li></ul></div></section><section class="product-tabs container"><article><span class="eyebrow">عن المنتج</span><h2>تفاصيل التصميم</h2>${productStory(p)}</article><article><span class="eyebrow">المواصفات</span><h2>المعلومات المتوفرة</h2><dl>${specs.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></article></section>${related.length ? `<section class="section container"><div class="section-heading"><div><span class="eyebrow">قد يناسبك أيضًا</span><h2>منتجات مرتبطة</h2></div><a class="text-link" href="/${c.slug}/">عرض التصنيف</a></div><div class="product-grid">${related.map(productCard).join("")}</div></section>` : ""}`;
+  ])}<section class="product-detail container"><div class="product-gallery"><div class="product-gallery__main"><img src="${image(p, 800)}" srcset="${image(p, 480)} 480w,${image(p, 800)} 800w" sizes="(max-width:800px) 100vw,50vw" width="800" height="874" alt="${esc(p.alt)}"></div></div><div class="product-info"><span class="eyebrow">${esc(c?.name)}</span><h1>${esc(p.name)}</h1><p class="product-code">${p.id}</p><strong class="product-price">${money(p.price)}</strong>${p.isNewRoundPlanter || p.isNewSphericalPlanter ? `<small class="product-tax-note">شامل الضريبة</small>` : ""}<p class="lead">${esc(p.shortDescription)}</p>${dims(p) ? `<p class="dimension-pill">${esc(dims(p))}</p>` : ""}${colorPicker(p)}<div class="quantity-add"><label>الكمية<input type="number" min="1" max="99" value="1" data-product-quantity></label><button class="button button--wide" type="button" data-add-to-cart="${p.id}" data-quantity-source>أضف للسلة</button></div><a class="button button--outline button--wide" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent(`مرحبًا، أود الاستفسار عن ${p.name} (${p.id})`)}" target="_blank" rel="noopener">${whatsappIcon}<span>استفسار</span></a><ul class="product-assurances"><li>مراجعة تفاصيل المنتج واللون قبل اعتماد الطلب</li><li>إمكانية إضافة أكثر من منتج للسلة</li><li>إرسال ملخص مرتب عبر واتساب</li></ul></div></section><section class="product-tabs container"><article><span class="eyebrow">عن المنتج</span><h2>تفاصيل التصميم</h2>${productStory(p)}</article><article><span class="eyebrow">المواصفات</span><h2>المعلومات المتوفرة</h2><dl>${specs.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></article></section>${related.length ? `<section class="section container"><div class="section-heading"><div><span class="eyebrow">قد يناسبك أيضًا</span><h2>منتجات مرتبطة</h2></div><a class="text-link" href="/${c.slug}/">عرض التصنيف</a></div><div class="product-grid">${related.map(productCard).join("")}</div></section>` : ""}`;
   return layout({
     title: `${p.seoTitle || p.name} | ArchiCiva`,
     description: p.seoDescription || p.shortDescription,
