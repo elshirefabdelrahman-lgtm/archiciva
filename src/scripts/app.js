@@ -92,19 +92,24 @@ backToTop?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "
 updateBackToTop();
 
 function setupAutoCarousels() {
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.querySelectorAll("[data-auto-carousel]").forEach((carousel) => {
     const cards = [...carousel.children];
     if (cards.length < 3) return;
     let index = 0;
     let paused = false;
     let timer;
+    const scrollToIndex = () => carousel.scrollTo({ left: cards[index].offsetLeft, behavior: "smooth" });
+    const syncIndex = () => {
+      index = cards.reduce((closest, card, cardIndex) =>
+        Math.abs(card.offsetLeft - carousel.scrollLeft) < Math.abs(cards[closest].offsetLeft - carousel.scrollLeft) ? cardIndex : closest, 0);
+    };
     const move = () => {
       if (paused) return;
       const cardWidth = cards[0].getBoundingClientRect().width;
       const visible = Math.max(1, Math.round(carousel.clientWidth / cardWidth));
       index = index >= cards.length - visible ? 0 : index + 1;
-      carousel.scrollTo({ left: cards[index].offsetLeft, behavior: "smooth" });
+      scrollToIndex();
     };
     const start = () => {
       clearInterval(timer);
@@ -118,7 +123,20 @@ function setupAutoCarousels() {
     carousel.addEventListener("touchend", resume, { passive: true });
     carousel.addEventListener("focusin", pause);
     carousel.addEventListener("focusout", resume);
-    start();
+    const shell = carousel.closest("[data-carousel-shell]");
+    shell?.querySelector("[data-carousel-prev]")?.addEventListener("click", () => {
+      syncIndex();
+      index = index <= 0 ? cards.length - 1 : index - 1;
+      scrollToIndex();
+      if (!reduceMotion) start();
+    });
+    shell?.querySelector("[data-carousel-next]")?.addEventListener("click", () => {
+      syncIndex();
+      index = index >= cards.length - 1 ? 0 : index + 1;
+      scrollToIndex();
+      if (!reduceMotion) start();
+    });
+    if (!reduceMotion) start();
   });
 }
 setupAutoCarousels();
