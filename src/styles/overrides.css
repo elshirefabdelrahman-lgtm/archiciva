@@ -202,3 +202,44 @@ h1,h2,h3,.hero h1,.page-hero h1,.section-heading h2,.finder-band h2,.whatsapp-ct
 /* Keep the official marks open and unobstructed beside the registration numbers. */
 .footer-credentials--brand{gap:16px}.footer-credentials--brand .credential-card{min-height:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}.footer-credentials--brand .credential-icon{display:block;flex:0 0 84px;width:84px;height:84px;border:0;border-radius:0;background:transparent;overflow:visible;padding:0}.footer-credentials--brand .credential-icon--vat{flex-basis:66px;width:66px;height:84px}.footer-credentials--brand .credential-icon--vat img{width:100%;height:100%;object-fit:contain;border-radius:0}.footer-credentials--brand .credential-icon svg.credential-emblem{display:block;width:84px;height:84px;overflow:visible}.footer-credentials--brand .credential-card>span:last-child{gap:2px}.footer-credentials--brand .credential-card small{font-size:.94rem}.footer-credentials--brand .credential-card strong{font-size:1.15rem}
 @media(max-width:600px){.footer-credentials--brand{gap:16px}.footer-credentials--brand .credential-card{min-height:0;padding:0}.footer-credentials--brand .credential-icon{flex-basis:78px;width:78px;height:78px}.footer-credentials--brand .credential-icon svg.credential-emblem{width:78px;height:78px}.footer-credentials--brand .credential-icon--vat{flex-basis:62px;width:62px;height:78px}}
+
+/* Readable brand signature and clean, product-card-style trending carousel. */
+.site-header .brand{gap:10px}
+.site-header .brand span{display:grid!important;min-width:0;gap:1px;line-height:1.25}
+.site-header .brand b{color:#fff;font-size:1rem;font-weight:650;letter-spacing:.01em}
+.site-header .brand small{display:block!important;color:#c8d0ca;font-size:.68rem;font-weight:400;line-height:1.5;white-space:nowrap}
+.visual-categories--carousel>a{display:grid;grid-template-rows:auto 1fr;min-height:0;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:none}
+.visual-categories--carousel>a:after{display:none}
+.visual-categories--carousel img{width:100%;height:auto;aspect-ratio:1/1.08;object-fit:cover;background:var(--cream)}
+.visual-categories--carousel span{position:static;display:grid;align-content:center;min-height:86px;padding:13px 15px 15px;color:var(--ink);background:#fff}
+.visual-categories--carousel span small,.visual-categories--carousel>a:first-child span small{color:var(--brand-dark);font-size:.8rem;line-height:1.6}
+.visual-categories--carousel span b{color:var(--ink);font-size:1.02rem;line-height:1.55}
+
+/* Keep supporting copy legible on compact screens across the whole storefront. */
+@media(max-width:760px){
+  body{font-size:16px}
+  .site-header .brand{gap:7px}
+  .site-header .brand img{width:43px;height:43px;padding:1px}
+  .site-header .brand b{font-size:.9rem}
+  .site-header .brand small{font-size:.57rem}
+  .nav-wrap{gap:8px}
+  .eyebrow,.hero .eyebrow,.page-hero .eyebrow{font-size:.88rem;letter-spacing:.02em;line-height:1.6}
+  .carousel-hint{display:block;margin-top:6px;color:#5f6b63;font-size:.88rem;line-height:1.6}
+  .finder-band p,.whatsapp-cta p,.page-hero p,.company-intro p{font-size:.98rem;line-height:1.9}
+  .visual-categories--carousel>a{min-height:0;border-radius:15px}
+  .visual-categories--carousel span{min-height:84px;padding:11px 10px 12px}
+  .visual-categories--carousel span small,.visual-categories--carousel>a:first-child span small{font-size:.78rem;line-height:1.55}
+  .visual-categories--carousel span b{font-size:.96rem;line-height:1.5}
+  .product-card h3{font-size:.96rem;line-height:1.55}
+  .product-card .eyebrow,.product-card__actions .text-link{font-size:.8rem}
+  .filters label,.product-assurances,.product-code,.demo-note,.cart-item__color{font-size:.86rem}
+  .product-colors>small,.quantity-add label{font-size:.8rem}
+  .waterfall-story p,.prose p,.prose li{font-size:.96rem;line-height:1.95}
+  .footer-grid p,.footer-grid a,.footer-bottom{font-size:.9rem;line-height:1.8}
+}
+@media(max-width:360px){
+  .site-header .brand img{width:39px;height:39px}
+  .site-header .brand b{font-size:.82rem}
+  .site-header .brand small{font-size:.51rem}
+  .site-header .menu-toggle{padding-inline:7px}
+}
