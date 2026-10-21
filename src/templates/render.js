@@ -84,7 +84,7 @@ export function layout({
   noindex = false,
 }) {
   const canonical = abs(path);
-  const assetVersion = "20261021-32";
+  const assetVersion = "20261021-33";
   const all = [
     {
       "@context": "https://schema.org",
@@ -298,6 +298,23 @@ export function productPage(p) {
 
 export function staticPage({ title, description, path, body }) {
   const isAbout = path === "/about/";
+  if (isAbout) {
+    const aboutServiceProduct = (id, title, href) => {
+      const product = products.find((item) => item.id === id);
+      return `<a class="about-service" href="${href || `/products/${product.slug}/`}"><img src="${image(product, 480)}" width="480" height="524" loading="lazy" alt="${esc(product.alt)}"><span>${esc(title)}</span></a>`;
+    };
+    const content = `${breadcrumb([
+      { name: "الرئيسية", href: "/" },
+      { name: title, href: path },
+    ])}<section class="about-cover"><div class="about-cover__shade"></div><div class="container about-cover__content"><span>من نحن</span><h1>شركة تشييد العمارة العربية</h1><p>رؤية تتقن الحاضر، وخبرات تصنع المستقبل</p></div></section><section class="about-profile container"><figure class="about-profile__visual"><img src="/assets/images/about/about-fitout-reception-900.webp" width="900" height="1125" alt="تصميم استقبال داخلي فاخر من أعمال الفيت أوت"><img class="about-profile__logo" src="/assets/images/brand/archiciva-mark-transparent.webp" width="180" height="132" alt="شعار شركة تشييد العمارة العربية"></figure><article class="about-profile__copy"><span class="eyebrow">عن الشركة</span><h2>نبذة عن الشركة</h2><p>شركة <strong>تشييد العمارة العربية</strong> هي شركة رائدة في مجال التشطيبات والبناء الخارجي وتصنيع الأثاث، بالإضافة إلى تقديم منتجات ديكورية وزراعية من الفايبر جلاس للمساحات الداخلية والخارجية.</p><p>نحن نؤمن بأن التفاصيل تصنع الفرق، لذلك نحرص على تقديم حلول متكاملة تجمع بين الجودة العالية والتصميم العصري لتلبية احتياجات عملائنا.</p></article></section><section class="about-values container"><article><span class="about-value-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></span><div><h2>رؤيتنا</h2><p>أن نكون الخيار الأول في تقديم حلول التصميم والتنفيذ التي تجمع بين الجودة والاستدامة.</p></div></article><article><span class="about-value-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="m14.5 9.5 5-5M16 4.5h3.5V8"/></svg></span><div><h2>رسالتنا</h2><p>تحويل الأفكار إلى مساحات ومنتجات مميزة تضيف قيمة حقيقية لعملائنا.</p></div></article></section><section class="about-services container"><div class="about-section-heading"><span class="eyebrow">ما نقدمه</span><h2>خدماتنا</h2><p>نقدم مجموعة متكاملة من الخدمات والمنتجات لتلبية جميع احتياجاتكم.</p></div><div class="about-services__grid"><a class="about-service about-service--fitout" href="/decor/"><img src="/assets/images/about/about-fitout-reception-900.webp" width="900" height="1125" loading="lazy" alt="أعمال خشبية وأثاث ضمن تصميم داخلي فاخر"><span>الأعمال الخشبية<br>والأثاث</span></a>${aboutServiceProduct("AC-P057", "النوافير والشلالات", "/water-features/")}${aboutServiceProduct("AC-P189", "الأحواض الزراعية والفايبر", "/planters/")}<a class="about-service about-service--fitout" href="/about/#fit-out"><img src="/assets/images/about/about-fitout-reception-900.webp" width="900" height="1125" loading="lazy" alt="خدمات الفيت أوت والتشطيبات"><span>الفيت أوت<br>والتشطيبات</span></a>${aboutServiceProduct("AC-P017", "المراكن الديكورية", "/planters/fiber-decor/")}</div></section><section class="about-project" id="fit-out"><img src="/assets/images/about/about-project-courtyard-1600.webp" width="1600" height="700" loading="lazy" alt="تنسيق مدخل فيلا فاخر بالمراكن والنباتات"><div class="about-project__shade"></div><div class="container about-project__content"><span>لنكن شريكك في تحويل أفكارك إلى واقع</span><h2>نحوّل رؤيتك إلى مساحة متكاملة</h2><p>نوفر حلولًا متكاملة تجمع بين جودة التنفيذ وجمال التصميم بما يناسب احتياج كل مشروع.</p><a class="button" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent("مرحبًا، أود الاستفسار عن خدمات ومنتجات تشييد العمارة")}" target="_blank" rel="noopener">تواصل معنا</a></div></section>`;
+    return layout({
+      title: `${title} | ArchiCiva`,
+      description,
+      path,
+      bodyClass: "about-page",
+      content,
+    });
+  }
   const pageHeader = isAbout
     ? `<section class="about-cover" role="img" aria-label="مقر شركة تشييد العمارة العربية"></section><section class="about-heading container"><h1>${title}</h1><p>${description}</p></section>`
     : `<section class="page-hero container"><span class="eyebrow">ArchiCiva</span><h1>${title}</h1><p>${description}</p></section>`;
