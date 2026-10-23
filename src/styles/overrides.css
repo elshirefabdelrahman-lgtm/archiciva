@@ -369,10 +369,10 @@ h1,h2,h3,.hero h1,.page-hero h1,.section-heading h2,.finder-band h2,.whatsapp-ct
 .footer-trust--payments .payment-trust{margin-inline-start:0}
 
 @media(max-width:760px){
-  .about-contact-banner{min-height:285px;background-image:url("../images/about/about-contact-banner-960.webp");background-position:center}
-  .about-contact-banner__content{width:52%;gap:15px;margin-right:16px;margin-left:auto}
-  .about-contact-banner__content h2{font-size:1.75rem}
-  .about-contact-banner__button{min-height:48px;padding-inline:10px;font-size:.82rem}
+  .about-contact-banner{width:100%;min-height:0;aspect-ratio:1536/458;background-image:url("../images/about/about-contact-banner-960.webp");background-position:center;background-size:100% 100%}
+  .about-contact-banner__content{width:38%;gap:clamp(6px,1.5vw,12px);margin-right:4%;margin-left:auto}
+  .about-contact-banner__content h2{font-size:clamp(1rem,4.2vw,1.55rem)}
+  .about-contact-banner__button{min-height:clamp(34px,7.5vw,44px);padding:4px 7px;font-size:clamp(.62rem,2vw,.82rem);line-height:1.35}
   .footer-trust--payments{grid-template-columns:1fr;gap:24px}
   .footer-credentials--trust{grid-template-columns:1fr;width:min(100%,270px);max-width:none;gap:6px;margin-inline:auto}
   .footer-credentials--trust .credential-card{display:grid;grid-template-columns:46px minmax(0,1fr);justify-items:stretch;align-items:center;gap:10px;min-height:0;padding:4px 0;text-align:start}
