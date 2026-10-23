@@ -79,6 +79,11 @@ for(const width of [960,1600]){const target=path.join(dist,"assets/images/hero",
 ensure(path.join(dist,"assets/images/about"));
 jobs.push(sharp(path.join(root,"source-assets","brand","about-fitout-reception.png")).resize({width:900,withoutEnlargement:true}).webp({quality:86,effort:5}).toFile(path.join(dist,"assets/images/about/about-fitout-reception-900.webp")));
 for(const width of [960,1600])jobs.push(sharp(path.join(root,"source-assets","brand","about-project-courtyard.png")).resize({width,withoutEnlargement:true}).webp({quality:86,effort:5}).toFile(path.join(dist,"assets/images/about",`about-project-courtyard-${width}.webp`)));
+for(const name of ["landscaping","fiberglass","fitout-retail","fitout-projects","woodwork","recycling","rugs"]){
+  for(const width of [760,1600]){
+    jobs.push(sharp(path.join(root,"source-assets","about-showcase",`${name}.png`)).resize({width,withoutEnlargement:true}).webp({quality:87,effort:5}).toFile(path.join(dist,"assets/images/about",`${name}-${width}.webp`)));
+  }
+}
 ensure(path.join(dist,"assets/images/brand"));
 const transparentLogo=path.join(root,"source-assets","brand","logo-transparent.png");
 const brandMark=()=>sharp(transparentLogo).extract({left:175,top:70,width:900,height:650});
