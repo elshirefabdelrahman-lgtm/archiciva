@@ -353,7 +353,7 @@ h1,h2,h3,.hero h1,.page-hero h1,.section-heading h2,.finder-band h2,.whatsapp-ct
 
 /* About page closing contact cover. */
 .about-contact-banner{position:relative;display:grid;min-height:clamp(300px,30vw,458px);align-items:center;background-image:url("../images/about/about-contact-banner-1600.webp");background-position:center;background-size:cover;overflow:hidden}
-.about-contact-banner__content{display:grid;width:min(430px,38vw);gap:20px;margin-inline-start:auto;margin-inline-end:max(24px,calc((100vw - 1200px)/2));text-align:center}
+.about-contact-banner__content{display:grid;width:min(430px,38vw);gap:20px;margin-right:max(24px,calc((100vw - 1200px)/2));margin-left:auto;text-align:center}
 .about-contact-banner__content h2{margin:0;color:#fff;font-size:clamp(2rem,4.2vw,4rem);line-height:1.15;text-shadow:0 5px 24px rgba(0,0,0,.35)}
 .about-contact-banner__button{width:100%;min-height:56px;border-color:#f28a2d;background:#e97813;font-size:1.05rem;box-shadow:0 12px 30px rgba(0,0,0,.24)}
 .about-contact-banner__button:hover,.about-contact-banner__button:focus-visible{background:#bf5700}
@@ -361,23 +361,25 @@ h1,h2,h3,.hero h1,.page-hero h1,.section-heading h2,.finder-band h2,.whatsapp-ct
 /* Business credentials sit together in the lower footer trust row. */
 .footer-trust--payments{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:28px}
 .footer-credentials--trust{grid-template-columns:repeat(2,minmax(230px,1fr));max-width:680px}
+.footer-credentials--trust .credential-card{min-height:0;padding:6px 0;border:0;border-radius:0;background:transparent;box-shadow:none}
 .footer-credentials--trust .credential-icon--commercial{overflow:visible;border:0;background:transparent}
+.footer-credentials--trust .credential-icon--vat{border:0;border-radius:0;background:transparent}
 .footer-credentials--trust .credential-emblem{display:block;width:54px;height:54px;overflow:visible}
 .footer-credentials--trust .credential-card strong{letter-spacing:0}
 .footer-trust--payments .payment-trust{margin-inline-start:0}
 
 @media(max-width:760px){
   .about-contact-banner{min-height:285px;background-image:url("../images/about/about-contact-banner-960.webp");background-position:center}
-  .about-contact-banner__content{width:52%;gap:15px;margin-inline-end:16px}
+  .about-contact-banner__content{width:52%;gap:15px;margin-right:16px;margin-left:auto}
   .about-contact-banner__content h2{font-size:1.75rem}
   .about-contact-banner__button{min-height:48px;padding-inline:10px;font-size:.82rem}
   .footer-trust--payments{grid-template-columns:1fr;gap:24px}
-  .footer-credentials--trust{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;max-width:none;gap:9px}
-  .footer-credentials--trust .credential-card{display:grid;justify-items:center;gap:7px;min-height:138px;padding:12px 7px;text-align:center}
-  .footer-credentials--trust .credential-card>span:last-child{justify-items:center}
-  .footer-credentials--trust .credential-icon{width:52px;height:52px}
-  .footer-credentials--trust .credential-icon--vat{width:56px;height:56px}
-  .footer-credentials--trust .credential-emblem{width:52px;height:52px}
+  .footer-credentials--trust{grid-template-columns:1fr;width:min(100%,270px);max-width:none;gap:6px;margin-inline:auto}
+  .footer-credentials--trust .credential-card{display:grid;grid-template-columns:46px minmax(0,1fr);justify-items:stretch;align-items:center;gap:10px;min-height:0;padding:4px 0;text-align:start}
+  .footer-credentials--trust .credential-card>span:last-child{justify-items:start}
+  .footer-credentials--trust .credential-icon{width:44px;height:44px}
+  .footer-credentials--trust .credential-icon--vat{width:46px;height:46px}
+  .footer-credentials--trust .credential-emblem{width:44px;height:44px}
   .footer-credentials--trust .credential-card small{font-size:.7rem}
   .footer-credentials--trust .credential-card strong{font-size:clamp(.66rem,3vw,.82rem)}
   .footer-trust--payments .payment-trust{justify-items:center;margin-inline:auto}
