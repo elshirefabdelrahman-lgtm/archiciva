@@ -86,7 +86,7 @@ export function layout({
   noindex = false,
 }) {
   const canonical = abs(path);
-  const assetVersion = "20261023-37";
+  const assetVersion = "20261023-38";
   const all = [
     {
       "@context": "https://schema.org",
@@ -302,16 +302,16 @@ export function staticPage({ title, description, path, body }) {
   const isAbout = path === "/about/";
   if (isAbout) {
     const showcases = [
-      ["landscaping", "خدمات اللاندسكيب وتنسيق الحدائق"],
-      ["fiberglass", "خدمات المراكن والأحواض الزراعية والنوافير والشلالات من الفيبر جلاس"],
-      ["fitout-retail", "خدمات التشطيبات والفيت أوت للمحلات والمكاتب والمساحات الخارجية"],
       ["fitout-projects", "حلول الفيت أوت والتشطيب الداخلي والخارجي المتكاملة"],
       ["woodwork", "أعمال الخشب والتجاليد الخشبية والأثاث المتنوع"],
-      ["recycling", "إعادة تدوير المعادن والخردة"],
       ["rugs", "سجاد هاند تفت بتصاميم فريدة وجودة استثنائية"],
+      ["fitout-retail", "خدمات التشطيبات والفيت أوت للمحلات والمكاتب والمساحات الخارجية"],
+      ["fiberglass", "خدمات المراكن والأحواض الزراعية والنوافير والشلالات من الفيبر جلاس"],
+      ["landscaping", "خدمات اللاندسكيب وتنسيق الحدائق"],
+      ["recycling", "إعادة تدوير المعادن والخردة"],
     ];
     const showcasePicture = ([name, alt], eager = false) => `<picture><source media="(max-width:760px)" srcset="/assets/images/about/${name}-760.webp"><img src="/assets/images/about/${name}-1600.webp" width="1600" height="1000" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} alt="${esc(alt)}"></picture>`;
-    const content = `<section class="about-cover about-cover--plain" role="img" aria-label="مقر شركة تشييد العمارة العربية"></section><section class="about-showcase-intro container"><span class="eyebrow">من نحن</span><h1>خبرات متكاملة تصنع مساحات ومشروعات مميزة</h1><p>تعرّف على مجالات عمل شركة تشييد العمارة العربية، وتنقّل بين الصور تلقائيًا أو باستخدام الأسهم.</p></section><section class="about-showcase-carousel container" aria-labelledby="about-showcase-title"><div class="about-showcase-heading"><div><span class="eyebrow">أعمالنا وخدماتنا</span><h2 id="about-showcase-title">جولة في مجالات خبرتنا</h2></div><small>عرض تلقائي — استخدم الأسهم للتنقل</small></div><div class="about-showcase-shell" data-carousel-shell><button class="about-showcase-control about-showcase-control--prev" type="button" data-carousel-prev aria-label="الصورة السابقة">‹</button><div class="about-showcase-track" data-auto-carousel aria-label="معرض خدمات وأعمال الشركة">${showcases.map((item, index) => `<figure class="about-showcase-slide">${showcasePicture(item, index === 0)}<figcaption>${esc(item[1])}</figcaption></figure>`).join("")}</div><button class="about-showcase-control about-showcase-control--next" type="button" data-carousel-next aria-label="الصورة التالية">›</button></div></section><section class="about-summary container"><span class="eyebrow">نبذة عن الشركة</span><h2>حلول متكاملة من الفكرة إلى التنفيذ</h2><p>شركة <strong>تشييد العمارة العربية</strong> تقدم خدمات متكاملة في اللاندسكيب وتنسيق الحدائق، والمراكن والأحواض الزراعية والنوافير والشلالات من الفيبر جلاس، وأعمال التشطيبات والفيت أوت الداخلي والخارجي، إلى جانب الأعمال الخشبية والأثاث، وإعادة تدوير المعادن والخردة، والسجاد الهاند تفت.</p><p>نعمل على تحويل الأفكار إلى حلول عملية وجمالية، مع الاهتمام بجودة الخامات ودقة التنفيذ وتناسق التفاصيل بما يلائم طبيعة كل مساحة واحتياجات كل مشروع.</p></section><section class="about-work-gallery" aria-labelledby="about-work-gallery-title"><div class="about-work-gallery__heading container"><span class="eyebrow">تفاصيل أعمالنا</span><h2 id="about-work-gallery-title">شاهد كل مجال بصورة كاملة</h2><p>جميع الصور معروضة كاملة وبالترتيب لتوضيح خدماتنا وتخصصاتنا.</p></div><div class="about-work-gallery__list">${showcases.map((item) => `<figure class="about-work-item">${showcasePicture(item)}<figcaption>${esc(item[1])}</figcaption></figure>`).join("")}</div></section>`;
+    const content = `<section class="about-cover about-cover--plain" role="img" aria-label="مقر شركة تشييد العمارة العربية"></section><section class="about-showcase-intro container"><span class="eyebrow">من نحن</span><h1>خبرات متكاملة تصنع مساحات ومشروعات مميزة</h1></section><section class="about-showcase-carousel container" aria-labelledby="about-showcase-title"><div class="about-showcase-heading"><div><span class="eyebrow">أعمالنا وخدماتنا</span><h2 id="about-showcase-title">جولة في مجالات خبرتنا</h2></div></div><div class="about-showcase-shell" data-carousel-shell><button class="about-showcase-control about-showcase-control--prev" type="button" data-carousel-prev aria-label="الصورة السابقة">‹</button><div class="about-showcase-track" data-auto-carousel aria-label="معرض خدمات وأعمال الشركة">${showcases.map((item, index) => `<figure class="about-showcase-slide">${showcasePicture(item, index === 0)}<figcaption>${esc(item[1])}</figcaption></figure>`).join("")}</div><button class="about-showcase-control about-showcase-control--next" type="button" data-carousel-next aria-label="الصورة التالية">›</button></div></section><section class="about-summary container"><span class="eyebrow">نبذة عن الشركة</span><h2>حلول متكاملة من الفكرة إلى التنفيذ</h2><p>شركة <strong>تشييد العمارة العربية</strong> تقدم خدمات متكاملة في اللاندسكيب وتنسيق الحدائق، والمراكن والأحواض الزراعية والنوافير والشلالات من الفيبر جلاس، وأعمال التشطيبات والفيت أوت الداخلي والخارجي، إلى جانب الأعمال الخشبية والأثاث، وإعادة تدوير المعادن والخردة، والسجاد الهاند تفت.</p><p>نعمل على تحويل الأفكار إلى حلول عملية وجمالية، مع الاهتمام بجودة الخامات ودقة التنفيذ وتناسق التفاصيل بما يلائم طبيعة كل مساحة واحتياجات كل مشروع.</p></section><section class="about-work-gallery"><div class="about-work-gallery__list">${showcases.map((item) => `<figure class="about-work-item">${showcasePicture(item)}<figcaption>${esc(item[1])}</figcaption></figure>`).join("")}</div></section>`;
     return layout({
       title: `${title} | ArchiCiva`,
       description,
