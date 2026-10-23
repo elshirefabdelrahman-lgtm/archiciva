@@ -362,7 +362,7 @@ const steps = [
   {
     key: "type",
     question: "وش النوع اللي تفضله؟",
-    options: ["مركن", "حوض مربع", "حوض مستطيل", "نافورة", "شلال", "ديكور وأثاث"],
+    options: ["مركن", "حوض مربع", "حوض مستطيل", "نافورة", "شلال", "لاند سكيب وتنسيق حدائق"],
   },
   {
     key: "budget",
@@ -378,7 +378,7 @@ function scoreProducts() {
     "حوض مستطيل": ["rectangular"],
     نافورة: ["fountains"],
     شلال: ["waterfalls"],
-    "ديكور وأثاث": ["decor"],
+    "لاند سكيب وتنسيق حدائق": ["planters", "water-features"],
   };
   const sizeMap = { صغيرة: "صغير", متوسطة: "متوسط", كبيرة: "كبير" };
   return products
