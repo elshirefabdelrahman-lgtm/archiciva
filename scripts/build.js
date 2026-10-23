@@ -76,6 +76,7 @@ for(const p of products){
 }
 for(const width of [960,1600]){const target=path.join(dist,"assets/images/hero",`archiciva-hero-villa-${width}.webp`);ensure(path.dirname(target));jobs.push(sharp(path.join(root,"source-assets","brand","cover.png")).resize({width,withoutEnlargement:true}).webp({quality:86,effort:5}).toFile(target));}
 for(const width of [960,1600]){const target=path.join(dist,"assets/images/hero",`about-office-${width}.webp`);ensure(path.dirname(target));jobs.push(sharp(path.join(root,"source-assets","brand","about-office-reception.jpg")).resize({width,withoutEnlargement:true}).webp({quality:84,effort:5}).toFile(target));}
+for(const width of [960,1600]){const target=path.join(dist,"assets/images/about",`about-contact-banner-${width}.webp`);ensure(path.dirname(target));jobs.push(sharp(path.join(root,"source-assets","brand","about-contact-banner.png")).resize({width,withoutEnlargement:true}).webp({quality:87,effort:5}).toFile(target));}
 ensure(path.join(dist,"assets/images/about"));
 jobs.push(sharp(path.join(root,"source-assets","brand","about-fitout-reception.png")).resize({width:900,withoutEnlargement:true}).webp({quality:86,effort:5}).toFile(path.join(dist,"assets/images/about/about-fitout-reception-900.webp")));
 for(const width of [960,1600])jobs.push(sharp(path.join(root,"source-assets","brand","about-project-courtyard.png")).resize({width,withoutEnlargement:true}).webp({quality:86,effort:5}).toFile(path.join(dist,"assets/images/about",`about-project-courtyard-${width}.webp`)));
