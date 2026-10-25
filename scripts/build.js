@@ -5,12 +5,17 @@ import { fileURLToPath } from "node:url";
 import { site } from "../src/config/site.js";
 import { categories, categoryGroups } from "../src/data/categories.js";
 import { products } from "../src/data/products.js";
-import { homePage, categoryPage, groupPage, productPage, listingPage, staticPage, cartPage, finderPage } from "../src/templates/render.js";
+import { homePage, categoryPage, groupPage, productPage, listingPage, staticPage, cartPage, finderPage, customDesignPage } from "../src/templates/render.js";
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const dist=path.join(root,"dist");
 const ensure=p=>fs.mkdirSync(p,{recursive:true});
 const whatsappGreeting=encodeURIComponent("مرحبًا، أود الاستفسار عن منتجات ArchiCiva");
+const instagramIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>';
+const linkedinIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="4" height="12"/><circle cx="5" cy="5" r="2"/><path d="M11 21V9h4v2c1-1.5 2.5-2.4 4.2-2.1 1.8.3 2.8 1.8 2.8 4.4V21h-4v-6.6c0-1.4-.5-2.4-1.7-2.4-1.4 0-1.9 1.1-1.9 2.7V21Z"/></svg>';
+const xIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h4.7l4.1 5.8L17.8 3H21l-6.8 8.2L21 21h-4.7l-4.6-6.4L6.3 21H3l7.2-8.8Z"/></svg>';
+const extraSocialLinks=`<a class="social-link" href="https://www.instagram.com/archiciva_26?exln=MThuNHRrc25qMW80MQ==" target="_blank" rel="noopener" aria-label="حساب ArchiCiva على إنستغرام">${instagramIcon}</a><a class="social-link" href="https://sa.linkedin.com/in/archiciv-sa" target="_blank" rel="noopener" aria-label="حساب ArchiCiva على لينكدإن">${linkedinIcon}</a><a class="social-link" href="https://x.com/ArchiCivG" target="_blank" rel="noopener" aria-label="حساب ArchiCiva على منصة X">${xIcon}</a>`;
+const customOrderCta='<section class="custom-order-cta"><a href="/custom-design/">التفصيل حسب الطلب</a></section>';
 const policyIcons={
   1:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 7h-7a5 5 0 0 0-5 5v1"/><path d="m17 4 3 3-3 3M4 17h7a5 5 0 0 0 5-5v-1"/><path d="m7 20-3-3 3-3"/></svg>',
   2:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>',
@@ -41,6 +46,8 @@ const finalizeHtml=(html,route)=>{
   .replace(/<button class="assistant-fab"([^>]*)><span>✦<\/span> مساعدة<\/button>/g,'<button class="assistant-fab"$1><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h4l4 3 4-3h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Zm-3 10H7v-2h10v2Zm0-4H7V6h10v2Zm-4 8H7v-2h6v2Z"/></svg><span class="assistant-fab__label">مساعدة</span></button>')
   .replace(/ ر\.س/g," ريال")
   .replace(/<span class="policy-number">0([1-7])<\/span>/g,(_,number)=>`<span class="policy-icon">${policyIcons[number]}</span>`)
+  .replace('<a class="social-link" href="https://www.tiktok.com/',`${extraSocialLinks}<a class="social-link" href="https://www.tiktok.com/`)
+  .replace('</main>',route==='/custom-design/'?'</main>':`</main>${customOrderCta}`)
   .replace(/<div class="container hero__content">[\s\S]*?<\/div><\/section><section class="category-strip/, '<div class="container hero__content"><img class="hero__logo" src="/assets/images/brand/archiciva-mark-transparent.webp" width="210" height="154" alt="شعار شركة تشييد العمارة العربية"><div class="hero__copy"><h1>تشييد العمارة العربية</h1><strong class="hero__tagline">نصنع الجمال في كل مساحة</strong><div class="hero__services" aria-label="خدمات ومنتجات الشركة"><span>مراكن</span><span>شلالات</span><span>نوافير</span><span>لاند سكيب</span><span>تنسيق حدائق</span></div><div class="hero__actions"><a class="button hero__primary" href="/products/">اكتشف منتجاتنا</a><a class="button button--glass" href="/product-finder/">ساعدني أختار</a></div></div></div></section><section class="category-strip')
   .replace(/<div class="section-heading"><div><span class="eyebrow">تجربة واضحة<\/span><h2>اختيار أسهل من أول نظرة<\/h2><\/div><\/div>/,'')
   .replace(/<div class="benefits">[\s\S]*?<\/div><\/div><\/section><section class="whatsapp-cta">/,`<div class="benefits"><article><span class="benefit-icon">${benefitIcons.expertise}</span><h3>خبرة واحترافية</h3><p>تنفيذ منظم يراعي تفاصيل العمل وجودة النتيجة.</p></article><article><span class="benefit-icon">${benefitIcons.services}</span><h3>خدمات متكاملة</h3><p>من التصميم والتجهيز إلى تنسيق عناصر المساحة.</p></article><article><span class="benefit-icon">${benefitIcons.design}</span><h3>تصاميم عصرية</h3><p>حلول متنوعة تناسب طبيعة المساحة واحتياج العميل.</p></article><article><span class="benefit-icon">${benefitIcons.quality}</span><h3>جودة في التنفيذ</h3><p>اهتمام بالخامات والتفاصيل في كل مرحلة.</p></article></div></div></section><section class="whatsapp-cta">`)
@@ -85,6 +92,14 @@ for(const name of ["landscaping","fiberglass","fitout-retail","fitout-projects",
     jobs.push(sharp(path.join(root,"source-assets","about-showcase",`${name}.png`)).resize({width,withoutEnlargement:true}).webp({quality:87,effort:5}).toFile(path.join(dist,"assets/images/about",`${name}-${width}.webp`)));
   }
 }
+ensure(path.join(dist,"assets/images/landscaping"));
+for(const name of ["landscape-hero","landscape-services","landscape-overview","home-gardens","villa-entrances","greenery","fiberglass","pergolas","paths","lighting","maintenance"]){
+  for(const width of [760,1600]){
+    jobs.push(sharp(path.join(root,"source-assets","landscaping-page",`${name}.png`)).resize({width,withoutEnlargement:true}).webp({quality:88,effort:5}).toFile(path.join(dist,"assets/images/landscaping",`${name}-${width}.webp`)));
+  }
+}
+ensure(path.join(dist,"assets/images/custom-design"));
+for(const width of [760,1600])jobs.push(sharp(path.join(root,"source-assets","custom-design","custom-planters.png")).resize({width,withoutEnlargement:true}).webp({quality:89,effort:5}).toFile(path.join(dist,"assets/images/custom-design",`custom-planters-${width}.webp`)));
 ensure(path.join(dist,"assets/images/brand"));
 const transparentLogo=path.join(root,"source-assets","brand","logo-transparent.png");
 const brandMark=()=>sharp(transparentLogo).extract({left:175,top:70,width:900,height:650});
@@ -103,6 +118,7 @@ for(const category of categories)if(!categoryGroups.some(group=>group.slug===cat
 for(const p of products)write(`/products/${p.slug}/`,productPage(p));
 write("/cart/",cartPage());
 write("/product-finder/",finderPage());
+write("/custom-design/",customDesignPage());
 write("/about/",staticPage({title:"من نحن",description:"شركة تشييد العمارة العربية للتشطيبات والـFit-Out والأعمال الخشبية والأثاث والمنتجات المصنوعة من الفيبر جلاس.",path:"/about/",body:`<div class="about-story-grid"><article class="about-story-card"><span class="eyebrow">01</span><h2>نبذة عن الشركة</h2><p>شركة <strong>تشييد العمارة العربية</strong> هي شركة رائدة في مجال <strong>التشطيبات والـFit-Out والأعمال الخشبية والأثاث</strong>، بالإضافة إلى تقديم منتجات <strong>ديكورية وزراعية مصنوعة من الفيبر جلاس</strong> للمساحات الداخلية والخارجية.</p><p>نؤمن بأن <strong>التفاصيل تصنع الفرق</strong>، لذلك نحرص على تقديم حلول متكاملة تجمع بين <strong>الجودة العالية، والتصميم العصري، والدقة في التنفيذ</strong>، لتلبية احتياجات عملائنا وتحويل أفكارهم إلى مساحات مميزة تجمع بين الجمال والوظيفية.</p></article><article class="about-story-card"><span class="eyebrow">02</span><h2>من نحن</h2><p>شركة متخصصة في <strong>أعمال التشطيبات والـFit-Out والأعمال الخشبية والأثاث</strong>، مع تقديم مجموعة متنوعة من <strong>المنتجات الديكورية والزراعية المصنوعة من الفيبر جلاس</strong>، والمصممة لتناسب المساحات الداخلية والخارجية.</p><p>نسعى إلى تقديم حلول تجمع بين <strong>التصميم المميز، جودة الخامات، ودقة التنفيذ</strong>، لنمنح كل مساحة طابعًا خاصًا يعكس ذوق واحتياجات عملائنا.</p></article></div>`}))
 write("/contact/",staticPage({title:"تواصل معنا",description:"تواصل مع ArchiCiva للاستفسار عن المنتجات وتأكيد تفاصيل الطلب.",path:"/contact/",body:`<h2>واتساب</h2><p>للاستفسار عن المقاسات والخامات والتجهيز والتوصيل، تواصل معنا عبر الرقم المعتمد.</p><p><a class="button" href="https://wa.me/${site.whatsapp}?text=${whatsappGreeting}" target="_blank" rel="noopener">ابدأ المحادثة على واتساب</a></p><p>لم يتم نشر عنوان فعلي أو ساعات عمل لعدم توفر بيانات معتمدة.</p>`}));
 write("/faq/",staticPage({title:"الأسئلة الشائعة",description:"إجابات واضحة عن طريقة الطلب والأسعار واختيار المنتجات في ArchiCiva.",path:"/faq/",body:`<div class="faq-list"><details><summary>كيف أطلب؟</summary><p>أضف المنتجات إلى السلة، أدخل بيانات التواصل، ثم راجع وأرسل الرسالة المنظمة عبر واتساب.</p></details><details><summary>هل الأسعار نهائية؟</summary><p>السعر ظاهر في بطاقة المنتج وصفحته، ويمكن إرسال المنتجات المختارة عبر واتساب.</p></details><details><summary>هل يوجد توصيل؟</summary><p>معلومات نطاق وتكلفة التوصيل غير متوفرة حاليًا. تواصل عبر واتساب لمعرفة التفاصيل.</p></details><details><summary>كيف أختار المقاس؟</summary><p>قِس المساحة وقارنها بالأبعاد المذكورة. إذا لم تظهر أبعاد المنتج فتحتاج إلى تأكيد عبر واتساب.</p></details><details><summary>هل يمكن طلب أكثر من قطعة؟</summary><p>نعم، يمكن زيادة الكمية في السلة وإرسال ملخص المنتجات والكميات.</p></details></div>`}));

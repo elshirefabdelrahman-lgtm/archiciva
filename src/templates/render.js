@@ -87,7 +87,7 @@ export function layout({
   noindex = false,
 }) {
   const canonical = abs(path);
-  const assetVersion = "20261024-44";
+  const assetVersion = "20261025-46";
   const all = [
     {
       "@context": "https://schema.org",
@@ -241,7 +241,7 @@ export const categoryPage = (c) => {
   });
 };
 export const groupPage = (g) =>
-  listingPage({
+  g.id === "landscaping" ? landscapingPage() : listingPage({
     title: g.name,
     description: g.description,
     path: `/${g.slug}/`,
@@ -249,6 +249,49 @@ export const groupPage = (g) =>
       categories.some((c) => c.parent === g.id && c.id === p.subcategory),
     ),
   });
+
+export function landscapingPage() {
+  const showcases = [
+    ["landscape-services", "خدماتنا في اللاند سكيب"],
+    ["landscape-overview", "خدمات اللاند سكيب وتنسيق الحدائق"],
+    ["home-gardens", "تنسيق الحدائق المنزلية"],
+    ["villa-entrances", "تنسيق الفلل والمداخل الخارجية"],
+    ["greenery", "المسطحات الخضراء والزراعة"],
+    ["fiberglass", "أعمال الفيبر جلاس"],
+    ["pergolas", "أعمال البرجولات والمظلات الخشبية"],
+    ["paths", "الممرات والأرضيات الخارجية"],
+    ["lighting", "الإضاءة الخارجية"],
+    ["maintenance", "أنظمة الري وصيانة الحدائق"],
+  ];
+  const picture = ([name, alt], eager = false) => `<picture><source media="(max-width:760px)" srcset="/assets/images/landscaping/${name}-760.webp"><img src="/assets/images/landscaping/${name}-1600.webp" width="1600" height="1067" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} alt="${esc(alt)}"></picture>`;
+  const content = `<section class="landscape-hero"><picture><source media="(max-width:760px)" srcset="/assets/images/landscaping/landscape-hero-760.webp"><img src="/assets/images/landscaping/landscape-hero-1600.webp" width="1600" height="900" fetchpriority="high" alt="حديقة فيلا بتنسيق لاند سكيب وإضاءة وشلال"></picture><div class="landscape-hero__copy"><h1>لاند سكيب وتنسيق حدائق</h1><p>من الفكرة إلى التنفيذ، نصنع مساحات خارجية تعكس ذوقك وتمنح مشروعك طابعًا مميزًا.</p></div></section><section class="landscape-intro"><div class="container"><h2>نصمم المساحات الخارجية لتصبح أكثر جمالًا وراحة</h2><p>في شركة تشييد العمارة نقدم حلولًا متكاملة في تصميم وتنفيذ أعمال اللاند سكيب وتنسيق الحدائق والفلل، من خلال الجمع بين جمال الطبيعة والتصميم العصري والتوزيع الذكي للمساحات. نعمل على تحويل المساحات الخارجية إلى بيئات متناسقة تجمع بين الأناقة والراحة والوظيفة العملية، مع الاهتمام بأدق التفاصيل واختيار النباتات والخامات والعناصر الجمالية المناسبة لكل مشروع.</p></div></section><section class="landscape-showcase-list" aria-label="خدمات وأعمال اللاند سكيب">${showcases.map((item, index) => `<figure class="landscape-showcase">${picture(item, index === 0)}</figure>`).join("")}</section><section class="about-contact-banner landscape-contact" aria-label="تواصل معنا"><div class="about-contact-banner__content"><h2>تواصل معنا</h2><a class="button about-contact-banner__button" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent("مرحبًا، أود الاستفسار عن خدمات اللاند سكيب وتنسيق الحدائق")}" target="_blank" rel="noopener">تواصل معنا عبر واتساب</a></div></section>`;
+  return layout({
+    title: "لاند سكيب وتنسيق حدائق | ArchiCiva",
+    description: "خدمات تصميم وتنفيذ اللاند سكيب وتنسيق الحدائق والمداخل والممرات والإضاءة وأنظمة الري والصيانة.",
+    path: "/landscaping/",
+    bodyClass: "landscape-page",
+    content,
+    schema: [{
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: "خدمات اللاند سكيب وتنسيق الحدائق",
+      provider: { "@type": "Organization", name: site.name },
+      areaServed: "SA",
+    }],
+  });
+}
+
+export function customDesignPage() {
+  const contactUrl = `https://wa.me/${site.whatsapp}?text=${encodeURIComponent("مرحبًا، أود طلب تصميم وتنفيذ أحواض زراعية ومراكن حسب الطلب")}`;
+  const content = `<section class="custom-design-visual" aria-labelledby="custom-design-title"><picture><source media="(max-width:760px)" srcset="/assets/images/custom-design/custom-planters-760.webp"><img src="/assets/images/custom-design/custom-planters-1600.webp" width="1600" height="799" fetchpriority="high" alt="التفصيل حسب الطلب للأحواض الزراعية والمراكن الفيبر جلاس"></picture><h1 id="custom-design-title" class="sr-only">التفصيل حسب الطلب للأحواض الزراعية والمراكن الفيبر جلاس</h1><a class="custom-design-visual__contact" href="${contactUrl}" target="_blank" rel="noopener">تواصل معنا <span aria-hidden="true">←</span></a><a class="custom-design-hotspot custom-design-hotspot--round" href="/planters/round/" aria-label="تصفح المراكن الفيبر جلاس"></a><a class="custom-design-hotspot custom-design-hotspot--square" href="/planters/square/" aria-label="تصفح أحواض الزراعة المربعة الفيبر جلاس"></a><a class="custom-design-hotspot custom-design-hotspot--rectangular" href="/planters/rectangular/" aria-label="تصفح أحواض الزراعة المستطيلة الفيبر جلاس"></a></section>`;
+  return layout({
+    title: "التفصيل حسب الطلب | ArchiCiva",
+    description: "تصميم وتنفيذ أحواض زراعية ومراكن فيبر جلاس حسب المقاسات والاحتياج، مع التواصل المباشر عبر واتساب.",
+    path: "/custom-design/",
+    bodyClass: "custom-design-page",
+    content,
+  });
+}
 
 export function productPage(p) {
   const c = cat(p.subcategory);
