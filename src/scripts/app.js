@@ -18,9 +18,23 @@ const money = (value) =>
 const pricing = (product, quantity = 1) =>
   `<div class="pricing pricing--compact"><div class="pricing__current"><span class="pricing__label">بعد الخصم</span><strong>${money(product.price * quantity)}</strong></div><div class="pricing__meta"><span class="pricing__before">قبل الخصم</span><del>${money(product.originalPrice * quantity)}</del><span class="discount-badge">خصم 20%</span></div></div>`;
 const moneyText = (value) => `${number(value)} ريال سعودي`;
+const safeQuantity = (value) => {
+  const quantity = Number(value);
+  return Number.isFinite(quantity) ? Math.max(1, Math.min(99, Math.trunc(quantity))) : 1;
+};
 const getCart = () => {
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY)) || [];
+    const stored = JSON.parse(localStorage.getItem(CART_KEY));
+    if (!Array.isArray(stored)) return [];
+    const cart = [];
+    for (const item of stored) {
+      if (!products.some((product) => product.id === item?.id)) continue;
+      const color = typeof item.color === "string" ? item.color : "";
+      const existing = cart.find((entry) => entry.id === item.id && (entry.color || "") === color);
+      if (existing) existing.quantity = Math.min(99, existing.quantity + safeQuantity(item.quantity));
+      else cart.push({ id: item.id, quantity: safeQuantity(item.quantity), ...(color ? { color } : {}) });
+    }
+    return cart;
   } catch {
     return [];
   }
@@ -47,12 +61,13 @@ const toast = (message) => {
 const cartItemKey = (item) => `${item.id}::${item.color || ""}`;
 
 function addToCart(id, quantity = 1, color = "") {
+  if (!products.some((product) => product.id === id)) return;
   const cart = getCart();
   const existing = cart.find(
     (item) => item.id === id && (item.color || "") === color,
   );
-  if (existing) existing.quantity = Math.min(99, existing.quantity + quantity);
-  else cart.push({ id, quantity, ...(color ? { color } : {}) });
+  if (existing) existing.quantity = Math.min(99, existing.quantity + safeQuantity(quantity));
+  else cart.push({ id, quantity: safeQuantity(quantity), ...(color ? { color } : {}) });
   saveCart(cart);
   toast(color ? `تمت إضافة المنتج باللون ${color}` : "تمت إضافة المنتج للسلة");
 }
@@ -243,7 +258,7 @@ function renderCart() {
   container.innerHTML = rows
     .map(
       ({ entry, product }) =>
-        `<article class="cart-item"><img src="${product.image}" width="90" height="95" alt=""><div><h3><a href="${pagePath(`/products/${product.slug}/`)}">${product.name}</a></h3>${entry.color ? `<p class="cart-item__color">اللون: <strong>${entry.color}</strong></p>` : ""}${pricing(product)}<div class="cart-item__controls"><button type="button" data-cart-decrease="${encodeURIComponent(cartItemKey(entry))}" aria-label="تقليل الكمية">−</button><b>${entry.quantity}</b><button type="button" data-cart-increase="${encodeURIComponent(cartItemKey(entry))}" aria-label="زيادة الكمية">+</button><button class="remove-button" type="button" data-cart-remove="${encodeURIComponent(cartItemKey(entry))}">حذف</button></div></div><div class="cart-item__total"><small>إجمالي المنتج</small>${pricing(product, entry.quantity)}</div></article>`,
+        `<article class="cart-item"><img src="${product.image}" width="90" height="95" alt=""><div><h3><a href="${pagePath(`/products/${product.slug}/`)}">${product.name}</a></h3>${entry.color ? `<p class="cart-item__color">اللون: <strong>${entry.color}</strong></p>` : ""}<small>سعر القطعة</small>${pricing(product)}<div class="cart-item__controls"><button type="button" data-cart-decrease="${encodeURIComponent(cartItemKey(entry))}" aria-label="تقليل الكمية">−</button><b>${entry.quantity}</b><button type="button" data-cart-increase="${encodeURIComponent(cartItemKey(entry))}" aria-label="زيادة الكمية">+</button><button class="remove-button" type="button" data-cart-remove="${encodeURIComponent(cartItemKey(entry))}" aria-label="حذف ${product.name} من السلة" title="حذف من السلة"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 4h4m-8 3 1 13h10l1-13M10 11v6m4-6v6"/></svg></button></div></div><div class="cart-item__total"><small>إجمالي ${entry.quantity} قطعة</small><strong>${money(product.price * entry.quantity)}</strong></div></article>`,
     )
     .join("");
   const total = rows.reduce(
@@ -289,18 +304,16 @@ document
     const form = new FormData(event.currentTarget);
     const lines = cart.map((entry, index) => {
       const product = products.find((item) => item.id === entry.id);
-      return `${index + 1}. المنتج: ${product.name}\n${entry.color ? `اللون: ${entry.color}\n` : ""}الكمية: ${entry.quantity}\nالسعر: ${moneyText(product.price)}\nالإجمالي: ${moneyText(product.price * entry.quantity)}`;
+      const productUrl = new URL(`/products/${product.slug}/`, location.origin).href;
+      const imageUrl = new URL(product.image, location.origin).href;
+      return `${index + 1}) ${product.name}\nرقم المنتج: ${product.id}${entry.color ? `\nاللون: ${entry.color}` : ""}\nالكمية: ${entry.quantity}\nسعر القطعة: ${moneyText(product.price)}\nإجمالي المنتج: ${moneyText(product.price * entry.quantity)}\nرابط المنتج: ${productUrl}\nصورة المنتج: ${imageUrl}`;
     });
     const total = cart.reduce((sum, entry) => {
       const product = products.find((item) => item.id === entry.id);
       return sum + product.price * entry.quantity;
     }, 0);
-    const message = `طلب جديد من متجر ArchiCiva\n\nاسم العميل: ${form.get("name")}\nرقم الهاتف: ${form.get("phone")}\nالمدينة: ${form.get("city")}\nالعنوان: ${form.get("address")}\nالملاحظات: ${form.get("notes") || "لا يوجد"}\nتفاصيل إضافية: ${form.get("details") || "لا يوجد"}\n\nالمنتجات:\n${lines.join("\n\n")}\n\nالإجمالي: ${moneyText(total)}`;
-    window.open(
-      `https://wa.me/${config.whatsapp}?text=${encodeURIComponent(message)}`,
-      "_blank",
-      "noopener",
-    );
+    const message = `*طلب جديد | ArchiCiva*\n\n*بيانات العميل*\nالاسم: ${form.get("name")}\nالهاتف: ${form.get("phone")}\nالمدينة: ${form.get("city")}\nالعنوان: ${form.get("address")}\nالملاحظات: ${form.get("notes") || "لا يوجد"}\nتفاصيل إضافية: ${form.get("details") || "لا يوجد"}\n\n*المنتجات (${cart.length})*\n\n${lines.join("\n\n──────────\n\n")}\n\n*الإجمالي النهائي: ${moneyText(total)}*\n\nيرجى مراجعة تفاصيل الطلب والتواصل مع العميل لتأكيده.`;
+    window.location.assign(`https://wa.me/${config.whatsapp}?text=${encodeURIComponent(message)}`);
   });
 
 const faq = [
