@@ -106,6 +106,23 @@ window.addEventListener("scroll", updateBackToTop, { passive: true });
 backToTop?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 updateBackToTop();
 
+const homeAd = document.querySelector("[data-home-ad]");
+if (homeAd) {
+  const adObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting && document.visibilityState === "visible") {
+        homeAd.play().catch(() => {});
+      } else {
+        homeAd.pause();
+      }
+    }
+  }, { threshold: 0.55 });
+  adObserver.observe(homeAd);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") homeAd.pause();
+  });
+}
+
 function setupAutoCarousels() {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.querySelectorAll("[data-auto-carousel]").forEach((carousel) => {

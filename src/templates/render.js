@@ -87,7 +87,7 @@ export function layout({
   noindex = false,
 }) {
   const canonical = abs(path);
-  const assetVersion = "20261026-47";
+  const assetVersion = "20261029-49";
   const all = [
     {
       "@context": "https://schema.org",
@@ -137,13 +137,12 @@ export function layout({
 }
 
 export function homePage() {
-  const featured = [
-    products[5],
-    products[12],
-    products[24],
-    products[25],
-    products[32],
-    products[30],
+  const featured = [];
+  const homeCategories = [
+    { name: "المراكن", description: "تصاميم تبرز جمال النباتات في كل مساحة", href: "/planters/pots/", image: "pots" },
+    { name: "الأحواض الزراعية", description: "أحواض مربعة ومستطيلة لتنسيق المداخل والحدائق", href: "/planters/basins/", image: "basins" },
+    { name: "النوافير", description: "تفاصيل مائية تضيف حضورًا وأناقة", href: "/water-features/fountains/", image: "fountains" },
+    { name: "الشلالات", description: "حركة الماء في تصميمات عصرية ومميزة", href: "/water-features/waterfalls/", image: "waterfalls" },
   ];
   const org = {
     "@context": "https://schema.org",
@@ -158,14 +157,13 @@ export function homePage() {
       availableLanguage: "Arabic",
     },
   };
-  const trendingCategoryIds = ["waterfalls", "fountains", "spherical", "oval", "round", "rattan-bamboo", "rectangular", "square", "fiber-decor"];
-  const trendingCategories = trendingCategoryIds.map((id) => categories.find((c) => c.id === id)).filter(Boolean);
-  const trendingProducts = ["AC-P189", "AC-P109"].map((id) => products.find((p) => p.id === id)).filter(Boolean);
+  const topPriced = (ids, count) => products.filter((p) => ids.includes(p.subcategory)).sort((a, b) => b.price - a.price).slice(0, count);
   const trendingItems = [
-    ...trendingCategories.slice(0, 2).map((category) => ({ category })),
-    ...trendingProducts.map((product) => ({ product })),
-    ...trendingCategories.slice(2).map((category) => ({ category })),
-  ];
+    ...topPriced(["waterfalls"], 4),
+    ...topPriced(["fountains"], 4),
+    ...topPriced(["rectangular", "square"], 2),
+    ...topPriced(["round", "spherical", "oval", "rattan-bamboo"], 2),
+  ].map((product) => ({ product }));
   const content = `<section class="hero"><picture><source media="(max-width:720px)" srcset="/assets/images/hero/archiciva-hero-villa-960.webp"><img src="/assets/images/hero/archiciva-hero-villa-1600.webp" width="1600" height="901" fetchpriority="high" alt="فيلا فاخرة ليلًا مع شلالات ونوافير ومراكن وأثاث خارجي"></picture><div class="hero__shade"></div><div class="container hero__content"><span class="eyebrow eyebrow--light">جودة في التفاصيل ودقة في التنفيذ</span><h1>تشييد العمارة العربية</h1><strong class="hero__tagline">نصنع الجمال في كل مساحة</strong><p>حلول متكاملة في التشطيبات والـFit-Out والأعمال الخشبية والأثاث، ومنتجات ديكورية وزراعية للمساحات الداخلية والخارجية.</p><div class="hero__actions"><a class="button button--light" href="/products/">اكتشف المنتجات</a><a class="button button--glass" href="/product-finder/">ساعدني أختار</a></div></div></section><section class="category-strip container" aria-label="التصنيفات الرئيسية">${categoryGroups.map((g) => `<a href="/${g.slug}/"><b>${g.name}</b><small>${g.description}</small><em>تصفح التصنيف</em></a>`).join("")}</section><section class="company-intro"><div class="container company-intro__grid"><div class="company-intro__title"><span class="eyebrow">عن الشركة</span><h2>نصنع الجمال في كل مساحة</h2><p>حلول تجمع بين التصميم المميز والجودة والدقة في التنفيذ.</p></div><div class="company-intro__content"><article><h3>نبذة عن الشركة</h3><p>شركة <strong>تشييد العمارة العربية</strong> هي شركة رائدة في مجال <strong>التشطيبات والـFit-Out والأعمال الخشبية والأثاث</strong>، بالإضافة إلى تقديم منتجات <strong>ديكورية وزراعية مصنوعة من الفيبر جلاس</strong> للمساحات الداخلية والخارجية.</p><p>نؤمن بأن <strong>التفاصيل تصنع الفرق</strong>، لذلك نحرص على تقديم حلول متكاملة تجمع بين <strong>الجودة العالية، والتصميم العصري، والدقة في التنفيذ</strong>، لتلبية احتياجات عملائنا وتحويل أفكارهم إلى مساحات مميزة تجمع بين الجمال والوظيفية.</p></article><article><h3>من نحن</h3><p>شركة متخصصة في <strong>أعمال التشطيبات والـFit-Out والأعمال الخشبية والأثاث</strong>، مع تقديم مجموعة متنوعة من <strong>المنتجات الديكورية والزراعية المصنوعة من الفيبر جلاس</strong>، والمصممة لتناسب المساحات الداخلية والخارجية.</p><p>نسعى إلى تقديم حلول تجمع بين <strong>التصميم المميز، جودة الخامات، ودقة التنفيذ</strong>، لنمنح كل مساحة طابعًا خاصًا يعكس ذوق واحتياجات عملائنا.</p><a class="text-link" href="/about/">اعرف المزيد عن الشركة</a></article></div></div></section><section class="section container"><div class="section-heading"><div><span class="eyebrow">اختيارات مميزة</span><h2>منتجات تلفت النظر في كل مساحة</h2></div><a class="text-link" href="/products/">عرض كل المنتجات</a></div><div class="product-grid">${featured.map(productCard).join("")}</div></section><section class="finder-band"><div class="container finder-band__grid"><div><span class="eyebrow eyebrow--light">مساعد اختيار ذكي</span><h2>محتار وش يناسب مساحتك؟</h2><p>جاوب على أسئلة بسيطة، و«مساعدة» ترتب لك أقرب المنتجات بحسب المكان والحجم والنوع والميزانية.</p><button class="button button--light" type="button" data-assistant-open>ابدأ الاختيار</button></div><div class="finder-action-card"><span>اختيار مخصص لمساحتك</span><strong>ابدأ مع مساعد الاختيار</strong><button class="button button--light" type="button" data-assistant-open>ساعدني أختار</button></div></div></section><section class="section container trending-section"><div class="section-heading"><div><span class="eyebrow">الأكثر جذبًا</span><h2>اكتشف تشكيلات تستحق المشاهدة</h2></div><small class="carousel-hint">يتحرك تلقائيًا ويمكنك استخدام الأسهم</small></div><div class="carousel-shell" data-carousel-shell><button class="carousel-control carousel-control--prev" type="button" data-carousel-prev aria-label="العرض السابق">‹</button><div class="visual-categories visual-categories--carousel" data-auto-carousel aria-label="تشكيلات رائجة تتحرك تلقائيًا">${trendingItems
     .map((item) => {
       if (item.product) {
@@ -180,11 +178,23 @@ export function homePage() {
     .join(
       "",
     )}</div><button class="carousel-control carousel-control--next" type="button" data-carousel-next aria-label="العرض التالي">›</button></div></section><section class="section section--soft"><div class="container"><div class="section-heading"><div><span class="eyebrow">تجربة واضحة</span><h2>اختيار أسهل من أول نظرة</h2></div></div><div class="benefits"><article><span>01</span><h3>تصنيفات واضحة</h3><p>تصفح المنتجات بحسب الشكل والنوع بدل البحث بين قائمة غير مرتبة.</p></article><article><span>02</span><h3>تفاصيل مفيدة</h3><p>نوضح المعلومات المتوفرة، ونترك غير المؤكد للمراجعة بدل التخمين.</p></article><article><span>03</span><h3>طلب عبر واتساب</h3><p>اجمع منتجاتك وكمياتها وبياناتك في رسالة منظمة وسهلة المراجعة.</p></article></div></div></section><section class="whatsapp-cta"><div class="container"><div><span class="eyebrow eyebrow--light">نحن هنا للمساعدة</span><h2>عندك مساحة وتبي اقتراح مناسب؟</h2><p>أرسل تفاصيل المساحة عبر واتساب، وسنتابع معك المعلومات المتاحة قبل اعتماد الطلب.</p></div><a class="button button--light whatsapp-cta-button" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent("مرحبًا، أود الاستفسار عن منتجات ArchiCiva")}" target="_blank" rel="noopener">${whatsappIcon}<span>تواصل</span></a></div></section>`;
+  const categoryShowcase = `<section class="home-category-showcase section container" aria-labelledby="home-category-title"><div class="section-heading home-category-showcase__heading"><div><span class="eyebrow">تصفح بسهولة</span><h2 id="home-category-title">اختار المنتج المناسب لمساحتك</h2></div></div><div class="home-category-grid">${homeCategories.map((item) => `<article class="home-category-card"><a class="home-category-card__image" href="${item.href}" aria-label="عرض منتجات ${item.name}"><img src="/assets/images/home-categories/${item.image}.webp" width="900" height="675" loading="lazy" alt="مجموعة ${item.name} من ArchiCiva"></a><div class="home-category-card__body"><div><h3>${item.name}</h3><p>${item.description}</p></div><a class="button home-category-card__button" href="${item.href}">عرض المنتجات <span aria-hidden="true">↗</span></a></div></article>`).join("")}</div><a class="button home-category-showcase__all" href="/products/">عرض كل المنتجات</a></section><section class="home-ad-section section" aria-labelledby="home-ad-title"><div class="container"><div class="section-heading"><div><span class="eyebrow">من المصنع إلى مساحتك</span><h2 id="home-ad-title">شاهد كيف نصنع التفاصيل</h2></div></div><div class="home-ad-frame"><video data-home-ad controls muted playsinline loop preload="none" poster="/assets/images/home-categories/ad-poster.webp" aria-label="إعلان ArchiCiva عن تصنيع وتجهيز المراكن والأحواض والنوافير والشلالات"><source src="/assets/video/archiciva-ad.mp4" type="video/mp4">المتصفح لا يدعم تشغيل الفيديو.</video></div></div></section>`;
+  const combinedContact = `<section class="home-contact-combined"><div class="container home-contact-combined__inner"><div class="home-contact-combined__copy"><span class="eyebrow eyebrow--light">نحن هنا للمساعدة</span><h2>عندك مساحة وتبي اقتراح مناسب؟</h2><a class="button button--light" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent("مرحبًا، أود الاستفسار عن منتجات ArchiCiva")}" target="_blank" rel="noopener">${whatsappIcon}<span>تواصل عبر واتساب</span></a></div><div class="home-contact-combined__assistant"><strong>ابدأ مع مساعد الاختيار</strong><button class="button button--light" type="button" data-assistant-open>ساعدني أختار</button></div></div></section>`;
+  const refinedShowcase = categoryShowcase
+    .replace('<span class="eyebrow">تصفح بسهولة</span>', '')
+    .replace('aria-labelledby="home-ad-title"', 'aria-label="إعلان ArchiCiva"')
+    .replace('<div class="section-heading"><div><span class="eyebrow">من المصنع إلى مساحتك</span><h2 id="home-ad-title">شاهد كيف نصنع التفاصيل</h2></div></div>', '');
+  const refreshedContent = content
+    .replace(/<section class="section container"><div class="section-heading"><div><span class="eyebrow">اختيارات مميزة[\s\S]*?(?=<section class="section container trending-section")/, refinedShowcase)
+    .replace('<span class="eyebrow">الأكثر جذبًا</span><h2>اكتشف تشكيلات تستحق المشاهدة</h2>', '<span class="eyebrow">الأكثر مبيعًا</span><h2>تشكيلات مميزة من الشلالات والنوافير</h2>')
+    .replace('<small class="carousel-hint">يتحرك تلقائيًا ويمكنك استخدام الأسهم</small>', '')
+    .replace(/<section class="section section--soft">[\s\S]*?(?=<section class="whatsapp-cta">)/, '')
+    .replace(/<section class="whatsapp-cta">[\s\S]*?<\/section>/, combinedContact);
   return layout({
     title: "ArchiCiva | مراكن ونوافير لتنسيق المساحات في السعودية",
     description: site.description,
     path: "/",
-    content,
+    content: refreshedContent,
     schema: [org],
     bodyClass: "home",
   });

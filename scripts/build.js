@@ -53,6 +53,7 @@ const finalizeHtml=(html,route)=>{
   .replace(/<div class="benefits">[\s\S]*?<\/div><\/div><\/section><section class="whatsapp-cta">/,`<div class="benefits"><article><span class="benefit-icon">${benefitIcons.expertise}</span><h3>خبرة واحترافية</h3><p>تنفيذ منظم يراعي تفاصيل العمل وجودة النتيجة.</p></article><article><span class="benefit-icon">${benefitIcons.services}</span><h3>خدمات متكاملة</h3><p>من التصميم والتجهيز إلى تنسيق عناصر المساحة.</p></article><article><span class="benefit-icon">${benefitIcons.design}</span><h3>تصاميم عصرية</h3><p>حلول متنوعة تناسب طبيعة المساحة واحتياج العميل.</p></article><article><span class="benefit-icon">${benefitIcons.quality}</span><h3>جودة في التنفيذ</h3><p>اهتمام بالخامات والتفاصيل في كل مرحلة.</p></article></div></div></section><section class="whatsapp-cta">`)
   .replace(/<span class="eyebrow">01<\/span><h2>نبذة عن الشركة<\/h2>/g,`<span class="about-card-icon">${benefitIcons.quality}</span><h2>نبذة عن الشركة</h2>`)
   .replace(/<span class="eyebrow">02<\/span><h2>من نحن<\/h2>/g,`<span class="about-card-icon">${benefitIcons.expertise}</span><h2>من نحن</h2>`)
+  .replace('<a href="/landscaping/">لاند سكيب وتنسيق حدائق</a><a href="/products/">كل المنتجات</a></div><div><h2>معلومات</h2>', '<a href="/products/">كل المنتجات</a></div><div><h2>معلومات</h2><a href="/landscaping/">لاند سكيب وتنسيق حدائق</a>')
   .replace(/favicon-32\.png/g,"favicon-32.png?v=20261002-7")
   .replace(/apple-touch-icon\.png/g,"apple-touch-icon.png?v=20261002-7")
   .replace(/archiciva-logo\.webp/g,"archiciva-mark-transparent.webp")
@@ -64,6 +65,7 @@ const write=(route,html)=>{const target=path.join(dist,route.replace(/^\//,""));
 const copy=(source,target)=>{ensure(path.dirname(target));fs.copyFileSync(source,target);};
 
 fs.rmSync(dist,{recursive:true,force:true});ensure(dist);
+copy(path.join(root,"source-assets/video/archiciva-ad.mp4"),path.join(dist,"assets/video/archiciva-ad.mp4"));
 copy(path.join(root,"src/styles/main.css"),path.join(dist,"assets/styles/main.css"));
 copy(path.join(root,"src/styles/overrides.css"),path.join(dist,"assets/styles/overrides.css"));
 copy(path.join(root,"src/scripts/app.js"),path.join(dist,"assets/scripts/app.js"));
@@ -72,6 +74,12 @@ copy(path.join(root,"node_modules/@fontsource-variable/alexandria/files/alexandr
 copy(path.join(root,"node_modules/@fontsource-variable/alexandria/files/alexandria-latin-wght-normal.woff2"),path.join(dist,"assets/fonts/alexandria-latin.woff2"));
 
 const jobs=[];
+for(const name of ["pots","basins","fountains","waterfalls","ad-poster"]){
+  const source=path.join(root,"source-assets","home-categories",`${name}.png`);
+  const target=path.join(dist,"assets/images/home-categories",`${name}.webp`);
+  ensure(path.dirname(target));
+  jobs.push(sharp(source).resize({width:name==="ad-poster"?1280:900,withoutEnlargement:true}).webp({quality:83,effort:5}).toFile(target));
+}
 for(const p of products){
   const source=path.join(root,p.image);
   for(const width of [480,800]){
@@ -113,6 +121,8 @@ await Promise.all(jobs);
 
 write("/",homePage());
 write("/products/",listingPage({title:"كل المنتجات",description:"تصفح جميع المراكن والأحواض والنوافير والشلالات ومنتجات تنسيق الحدائق المتوفرة في الكتالوج الحالي.",path:"/products/",items:products,heading:"كل المنتجات",intro:"تصفح الكتالوج الحالي واستخدم البحث والفلاتر للوصول إلى المنتج الأقرب لمساحتك."}));
+write("/planters/pots/",listingPage({title:"المراكن",description:"تصفح جميع المراكن الدائرية والكروية والبيضاوية ومراكن الروتان والبامبو.",path:"/planters/pots/",items:products.filter(p=>["spherical","round","oval","rattan-bamboo"].includes(p.subcategory)),heading:"المراكن",intro:"اكتشف المراكن بمختلف الأشكال والأحجام واختر المناسب لمساحتك."}));
+write("/planters/basins/",listingPage({title:"الأحواض الزراعية",description:"تصفح الأحواض الزراعية المربعة والمستطيلة.",path:"/planters/basins/",items:products.filter(p=>["square","rectangular"].includes(p.subcategory)),heading:"الأحواض الزراعية",intro:"أحواض زراعة مربعة ومستطيلة لتنسيق المداخل والحدائق والمساحات المختلفة."}));
 for(const group of categoryGroups)write(`/${group.slug}/`,groupPage(group));
 for(const category of categories)if(!categoryGroups.some(group=>group.slug===category.slug))write(`/${category.slug}/`,categoryPage(category));
 for(const p of products)write(`/products/${p.slug}/`,productPage(p));
