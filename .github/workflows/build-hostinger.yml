@@ -1,0 +1,42 @@
+name: Build Hostinger site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'source-assets/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/build-hostinger.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run validate
+      - run: npm run sync:hostinger
+      - name: Commit built website
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- . ':!dist' ':!node_modules'
+          if ! git diff --cached --quiet; then
+            git commit -m "Build website for Hostinger"
+            git push origin HEAD:main
+          fi

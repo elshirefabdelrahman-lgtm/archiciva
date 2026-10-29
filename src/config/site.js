@@ -1,7 +1,7 @@
 export const site = {
   name: "ArchiCiva",
   nameAr: "تشييد العمارة العربية",
-  url: process.env.SITE_URL || "https://archiciva.vercel.app",
+  url: process.env.SITE_URL || "https://archiciva.store",
   language: "ar",
   direction: "rtl",
   currency: "SAR",
