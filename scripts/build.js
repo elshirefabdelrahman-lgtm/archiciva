@@ -38,6 +38,8 @@ const finalizeHtml=(html,route)=>{
   const fileNavigation=`<script>if(location.protocol==="file:"){document.addEventListener("click",function(event){const link=event.target.closest("a[href]");if(!link)return;const raw=link.getAttribute("href");if(!raw||raw.startsWith("http")||raw.startsWith("mailto:")||raw.startsWith("tel:")||raw.startsWith("#"))return;event.preventDefault();const clean=raw.replace(/^\\//,"").split("#")[0].split("?")[0];const target=clean===""?"index.html":clean.endsWith("/")?clean+"index.html":clean;location.href=new URL(target,document.baseURI).href;});}</script>`;
   return html
   .replace("<head>",`<head><base href="${baseHref}">${fileNavigation}`)
+  .replace('<a href="/about/">من نحن</a></nav>', '<a href="/about/">من نحن</a><a href="/wholesale/">بيع جملة للتجار وأصحاب المشاريع</a></nav>')
+  .replace('<a href="/privacy/">الخصوصية</a></div>', '<a href="/privacy/">الخصوصية</a><a href="/wholesale/">بيع جملة للتجار وأصحاب المشاريع</a></div>')
   .replace(/<p class="demo-note">[^<]*<\/p>/g,"")
   .replace(/الأسعار المعروضة تجريبية وتحتاج إلى اعتماد قبل الطلب النهائي\./g,"السعر ظاهر في بطاقة المنتج وصفحته، ويمكن إرسال المنتجات المختارة عبر واتساب.")
   .replace(/<span>الأسعار الحالية تجريبية وتحتاج إلى اعتماد\.<\/span>/g,`<a class="whatsapp-link" href="https://wa.me/${site.whatsapp}?text=${whatsappGreeting}" target="_blank" rel="noopener">تواصل عبر واتساب</a>`)
@@ -121,7 +123,8 @@ await Promise.all(jobs);
 
 write("/",homePage());
 write("/products/",listingPage({title:"كل المنتجات",description:"تصفح جميع المراكن والأحواض والنوافير والشلالات ومنتجات تنسيق الحدائق المتوفرة في الكتالوج الحالي.",path:"/products/",items:products,heading:"كل المنتجات",intro:"تصفح الكتالوج الحالي واستخدم البحث والفلاتر للوصول إلى المنتج الأقرب لمساحتك."}));
-write("/planters/pots/",listingPage({title:"المراكن",description:"تصفح جميع المراكن الدائرية والكروية والبيضاوية ومراكن الروتان والبامبو.",path:"/planters/pots/",items:products.filter(p=>["spherical","round","oval","rattan-bamboo"].includes(p.subcategory)),heading:"المراكن",intro:"اكتشف المراكن بمختلف الأشكال والأحجام واختر المناسب لمساحتك."}));
+const planterDisplayOrder=["spherical","round","oval","fiber-decor","rattan-bamboo"];
+write("/planters/pots/",listingPage({title:"المراكن",description:"تصفح المراكن، ثم المنتجات الديكورية من الفايبر، ثم منتجات الروتان والبامبو.",path:"/planters/pots/",items:products.filter(p=>planterDisplayOrder.includes(p.subcategory)).sort((a,b)=>planterDisplayOrder.indexOf(a.subcategory)-planterDisplayOrder.indexOf(b.subcategory)),heading:"المراكن",intro:"اكتشف المراكن بمختلف الأشكال والأحجام، والمنتجات الديكورية من الفايبر، ثم الروتان والبامبو."}));
 write("/planters/basins/",listingPage({title:"الأحواض الزراعية",description:"تصفح الأحواض الزراعية المربعة والمستطيلة.",path:"/planters/basins/",items:products.filter(p=>["square","rectangular"].includes(p.subcategory)),heading:"الأحواض الزراعية",intro:"أحواض زراعة مربعة ومستطيلة لتنسيق المداخل والحدائق والمساحات المختلفة."}));
 for(const group of categoryGroups)write(`/${group.slug}/`,groupPage(group));
 for(const category of categories)if(!categoryGroups.some(group=>group.slug===category.slug))write(`/${category.slug}/`,categoryPage(category));
@@ -152,7 +155,9 @@ write("/privacy/",staticPage({title:"سياسة الخصوصية والاستخ�
 <section class="privacy-thanks">${privacyIcon('<path d="M12 21s-8-4.7-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.3-8 11-8 11Z"/>')}<div><h2>شكراً لثقتكم</h2><p>شركة تشييد العمارة العربية للمقاولات</p></div></section>
 </div>`}));
 
-const urls=["/","/products/","/product-finder/","/about/","/contact/","/faq/","/shipping-returns/","/privacy/",...categoryGroups.map(x=>`/${x.slug}/`),...categories.map(x=>`/${x.slug}/`),...products.map(x=>`/products/${x.slug}/`)];
+write("/wholesale/",staticPage({title:"بيع جملة للتجار وأصحاب المشاريع",description:"تواصل مع ArchiCiva لطلبات الجملة وتجهيز مشاريع المراكن والأحواض والنوافير والشلالات.",path:"/wholesale/",body:`<h2>طلبات الجملة والمشاريع</h2><p>نوفر للتجار وأصحاب المشاريع مجموعة من المراكن والأحواض الزراعية والنوافير والشلالات. أرسل لنا نوع المنتجات والكميات والمقاسات المطلوبة ومدينة التسليم، وسنتواصل معك لمراجعة التفاصيل وعرض السعر.</p><p><a class="button button--wide" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent("مرحبًا، أود الاستفسار عن بيع الجملة للتجار وأصحاب المشاريع. المنتجات المطلوبة: ")}" target="_blank" rel="noopener">تواصل معنا عبر واتساب</a></p>`}));
+
+const urls=["/","/products/","/product-finder/","/about/","/contact/","/wholesale/","/faq/","/shipping-returns/","/privacy/",...categoryGroups.map(x=>`/${x.slug}/`),...categories.map(x=>`/${x.slug}/`),...products.map(x=>`/products/${x.slug}/`)];
 fs.writeFileSync(path.join(dist,"sitemap.xml"),`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...new Set(urls)].map(url=>`<url><loc>${site.url}${url}</loc></url>`).join("")}</urlset>`);
 fs.writeFileSync(path.join(dist,"robots.txt"),`User-agent: *\nAllow: /\nDisallow: /cart/\nSitemap: ${site.url}/sitemap.xml\n`);
 fs.writeFileSync(path.join(dist,"404.html"),finalizeHtml(staticPage({title:"الصفحة غير موجودة",description:"لم نتمكن من العثور على الصفحة المطلوبة.",path:"/404/",body:`<p>قد يكون الرابط تغير أو كُتب بطريقة غير صحيحة.</p><p><a class="button" href="/">العودة للرئيسية</a></p>`}),"/"));

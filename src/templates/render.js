@@ -187,7 +187,7 @@ export function homePage() {
     .replace('<div class="section-heading"><div><span class="eyebrow">من المصنع إلى مساحتك</span><h2 id="home-ad-title">شاهد كيف نصنع التفاصيل</h2></div></div>', '');
   const refreshedContent = content
     .replace(/<section class="section container"><div class="section-heading"><div><span class="eyebrow">اختيارات مميزة[\s\S]*?(?=<section class="section container trending-section")/, refinedShowcase)
-    .replace('<span class="eyebrow">الأكثر جذبًا</span><h2>اكتشف تشكيلات تستحق المشاهدة</h2>', '<span class="eyebrow">الأكثر مبيعًا</span><h2>تشكيلات مميزة من الشلالات والنوافير</h2>')
+    .replace('<span class="eyebrow">الأكثر جذبًا</span><h2>اكتشف تشكيلات تستحق المشاهدة</h2>', '<span class="eyebrow">الأكثر مبيعًا</span><h2>تشكيلات مميزة</h2>')
     .replace('<small class="carousel-hint">يتحرك تلقائيًا ويمكنك استخدام الأسهم</small>', '')
     .replace(/<section class="section section--soft">[\s\S]*?(?=<section class="whatsapp-cta">)/, '')
     .replace(/<section class="whatsapp-cta">[\s\S]*?<\/section>/, combinedContact);
