@@ -4,6 +4,18 @@ document.head.insertAdjacentHTML(
 );
 const products = window.__ARCHICIVA_PRODUCTS__ || [];
 const config = window.__ARCHICIVA_CONFIG__ || {};
+const normalizeArabic = (value) => String(value || "")
+  .toLowerCase().normalize("NFKD").replace(/[\u064b-\u065f\u0670]/g, "")
+  .replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
+  .replace(/[٠-٩]/g, (digit) => "٠١٢٣٤٥٦٧٨٩".indexOf(digit))
+  .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const productText = (product) => normalizeArabic([product.name, product.shortDescription, product.color, product.material, product.subcategory, ...(product.tags || []), ...(product.uses || [])].join(" "));
+const searchProducts = (query, limit = 6) => {
+  const words = normalizeArabic(query).split(/\s+/).filter((word) => word && !["سعر", "اسعار", "بكم", "كم", "عندكم", "ابغى", "ابي", "عايز", "منتج", "المنتج", "من", "عن", "هل", "في", "ريال"].includes(word));
+  if (!words.length) return [];
+  return products.filter((product) => words.every((word) => productText(product).includes(word))).slice(0, limit);
+};
+const escapeHtml = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const fileMode = location.protocol === "file:";
 const assetPath = (value) => (fileMode ? value.replace(/^\//, "") : value);
 const pagePath = (value) =>
@@ -183,32 +195,18 @@ document
   .querySelector("[data-search-close]")
   ?.addEventListener("click", () => (searchPanel.hidden = true));
 document.querySelector("#global-search")?.addEventListener("input", (event) => {
-  const query = event.target.value.trim().toLowerCase();
+  const query = event.target.value.trim();
   const results = document.querySelector("[data-search-results]");
   if (query.length < 2) {
     results.innerHTML = "";
     return;
   }
-  const matched = products
-    .filter((item) =>
-      [
-        item.name,
-        item.shortDescription,
-        item.color,
-        item.material,
-        item.subcategory,
-        ...item.tags,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(query),
-    )
-    .slice(0, 6);
+  const matched = searchProducts(query);
   results.innerHTML = matched.length
     ? matched
         .map(
           (item) =>
-            `<a href="${pagePath(`/products/${item.slug}/`)}"><img src="${item.image}" width="50" height="50" alt=""><span><b>${item.name}</b><small>${money(item.price)}</small></span></a>`,
+            `<a href="${pagePath(`/products/${item.slug}/`)}"><img src="${item.image}" width="50" height="50" alt=""><span><b>${escapeHtml(item.name)}</b><small>${moneyText(item.price)}</small></span></a>`,
         )
         .join("")
     : `<p>لا توجد نتائج مطابقة.</p>`;
@@ -224,11 +222,12 @@ function setupFilters() {
   const price = document.querySelector("[data-filter-price]");
   const sort = document.querySelector("[data-sort]");
   const apply = () => {
-    const query = (search?.value || "").trim().toLowerCase();
+    const query = normalizeArabic(search?.value || "");
+    const words = query.split(/\s+/).filter(Boolean);
     const maxPrice = Number(price?.value || Infinity);
     let visible = cards.filter(
       (card) =>
-        (!query || card.dataset.name.toLowerCase().includes(query)) &&
+        (!words.length || words.every((word) => normalizeArabic(card.dataset.name).includes(word))) &&
         (!category?.value || card.dataset.category === category.value) &&
         (!size?.value || card.dataset.size === size.value) &&
         Number(card.dataset.price) <= maxPrice,
@@ -369,7 +368,6 @@ const faq = [
     answer: "اضغط زر واتساب في الموقع لفتح المحادثة مباشرة وإرسال استفسارك.",
   },
 ];
-const assistantState = { answers: {}, recommendations: [] };
 const steps = [
   {
     key: "place",
@@ -397,13 +395,12 @@ const steps = [
   {
     key: "budget",
     question: "ميزانيتك تقريبًا كم؟",
-    options: ["200", "500", "1000", "1500", "2000"],
+    options: ["200", "500", "1000", "2000", "5000", "بدون حد"],
   },
 ];
-function scoreProducts() {
-  const a = assistantState.answers;
+function scoreProducts(a, widen = false) {
   const categoryMap = {
-    مركن: ["spherical", "round", "oval", "rattan-bamboo"],
+    مركن: ["spherical", "round", "oval", "rattan-bamboo", "fiber-decor"],
     "حوض مربع": ["square"],
     "حوض مستطيل": ["rectangular"],
     نافورة: ["fountains"],
@@ -411,7 +408,11 @@ function scoreProducts() {
     "لاند سكيب وتنسيق حدائق": ["planters", "water-features"],
   };
   const sizeMap = { صغيرة: "صغير", متوسطة: "متوسط", كبيرة: "كبير" };
+  const wanted = categoryMap[a.type] || [];
+  const budget = Number(a.budget);
   return products
+    .filter((product) => widen || a.type === "لاند سكيب وتنسيق حدائق" || wanted.includes(product.subcategory))
+    .filter((product) => widen || a.budget === "بدون حد" || product.price <= budget)
     .map((product) => {
       let score = 0,
         reasons = [];
@@ -419,7 +420,7 @@ function scoreProducts() {
         score += 4;
         reasons.push("يناسب المكان");
       }
-      if ((categoryMap[a.type] || []).includes(product.subcategory)) {
+      if (wanted.includes(product.subcategory)) {
         score += 5;
         reasons.push("من النوع المطلوب");
       }
@@ -427,13 +428,9 @@ function scoreProducts() {
         score += 3;
         reasons.push("حجمه قريب من المساحة");
       }
-      const budget = Number(a.budget);
-      if (product.price <= budget) {
+      if (a.budget === "بدون حد" || product.price <= budget) {
         score += 4;
         reasons.push("ضمن الميزانية");
-      } else if (product.price - budget <= 500) {
-        score += 1;
-        reasons.push("قريب من الميزانية");
       }
       return { product, score, reasons };
     })
@@ -450,8 +447,7 @@ function initAssistant(root, floating = false) {
   const options = root.querySelector("[data-assistant-options]");
   const actions = root.querySelector("[data-assistant-actions]");
   let step = 0;
-  assistantState.answers = {};
-  assistantState.recommendations = [];
+  const assistantState = { answers: {}, recommendations: [] };
   const addMessage = (text, user = false) => {
     const node = document.createElement("div");
     node.className = `assistant-message${user ? " assistant-message--user" : ""}`;
@@ -467,17 +463,27 @@ function initAssistant(root, floating = false) {
         (option) =>
           `<button type="button" data-answer="${option}">${current.key === "budget" ? `${option} ريال` : option}</button>`,
       )
-      .join("");
+      .join("") + '<button type="button" data-faq-mode>اسأل عن منتج أو خدمة</button>';
   };
   const showResults = () => {
-    const scored = scoreProducts();
+    let scored = scoreProducts(assistantState.answers);
+    const expanded = !scored.length;
+    if (expanded) scored = scoreProducts(assistantState.answers, true);
     assistantState.recommendations = scored.map((item) => item.product);
     addMessage(
-      `هذي الخيارات اللي أشوفها مناسبة لك 👇<div class="assistant-results">${scored.map(({ product, reasons }) => `<a class="assistant-result" href="${pagePath(`/products/${product.slug}/`)}"><img src="${product.image}" alt=""><span><b>${product.name}</b><small>${moneyText(product.price)} · ${reasons.slice(0, 2).join("، ") || "أقرب خيار متاح"}</small></span></a>`).join("")}</div>`,
+      `${expanded ? "ما لقيت منتجًا بنفس النوع والميزانية؛ هذه أقرب بدائل متاحة وأسعارها الحالية:" : "هذه أقرب الخيارات لك وأسعارها الحالية:"}<div class="assistant-results">${scored.map(({ product, reasons }) => `<a class="assistant-result" href="${pagePath(`/products/${product.slug}/`)}"><img src="${product.image}" alt=""><span><b>${escapeHtml(product.name)}</b><small>${moneyText(product.price)} · ${reasons.slice(0, 2).join("، ") || "شاهد التفاصيل"}</small></span></a>`).join("")}</div>`,
     );
-    options.innerHTML = `<button type="button" data-assistant-restart>إعادة الاختيار</button><button type="button" data-faq-mode>عندي سؤال</button>`;
+    options.innerHTML = `<button type="button" data-assistant-restart>إعادة الاختيار</button><button type="button" data-faq-mode>اسأل عن منتج أو خدمة</button>`;
     actions.hidden = false;
     actions.innerHTML = `<button class="button" type="button" data-assistant-whatsapp>أرسل اختياري عبر واتساب</button>`;
+  };
+  const answerQuestion = (query) => {
+    const normalized = normalizeArabic(query);
+    const matched = searchProducts(query, 4);
+    if (matched.length) return `لقيت المنتجات دي من الكتالوج الحالي، اضغط على أي منتج لتشوف التفاصيل:<div class="assistant-results">${matched.map((product) => `<a class="assistant-result" href="${pagePath(`/products/${product.slug}/`)}"><img src="${product.image}" alt=""><span><b>${escapeHtml(product.name)}</b><small>${moneyText(product.price)} · السعر الحالي</small></span></a>`).join("")}</div>`;
+    if (/لاند|حدائق|تنسيق|صيانه|زراعه|اضاءه|برجول|تفصيل|جمله|مشاريع/.test(normalized)) return `نقدم خدمات تنسيق الحدائق واللاند سكيب، والتفصيل حسب الطلب، والبيع بالجملة للتجار وأصحاب المشاريع. السعر حسب تفاصيل المشروع؛ تواصل معنا لعرض مناسب. <a href="${pagePath('/landscaping/')}">خدمات اللاند سكيب</a> · <a href="${pagePath('/custom-design/')}">التفصيل حسب الطلب</a> · <a href="${pagePath('/wholesale/')}">بيع الجملة</a>`;
+    const match = faq.find((item) => item.keys.some((key) => normalized.includes(normalizeArabic(key))));
+    return match?.answer || "ما عندي معلومة مؤكدة عن هذا السؤال. اكتب اسم المنتج أو تواصل معنا عبر واتساب للتفاصيل.";
   };
   options.addEventListener("click", (event) => {
     const answer = event.target.closest("[data-answer]");
@@ -485,7 +491,7 @@ function initAssistant(root, floating = false) {
       const current = steps[step];
       assistantState.answers[current.key] = answer.dataset.answer;
       addMessage(
-        current.key === "budget"
+        current.key === "budget" && answer.dataset.answer !== "بدون حد"
           ? `${answer.dataset.answer} ريال`
           : answer.dataset.answer,
         true,
@@ -500,12 +506,13 @@ function initAssistant(root, floating = false) {
       messages.innerHTML = "";
       actions.hidden = true;
       assistantState.answers = {};
+      assistantState.recommendations = [];
       ask();
     }
     if (event.target.closest("[data-faq-mode]")) {
-      addMessage("اكتب سؤالك هنا، وإذا المعلومة غير متوفرة بقول لك بكل وضوح.");
+      addMessage("اكتب اسم منتج أو اسأل عن سعره أو إحدى خدماتنا. الأسعار تتحدث من الكتالوج الحالي.");
       options.innerHTML =
-        '<input type="text" data-faq-input placeholder="مثال: هل يوجد توصيل؟"><button type="button" data-faq-send>إرسال</button>';
+        '<input type="search" data-faq-input aria-label="سؤالك" placeholder="مثال: حوض مستطيل أو تنسيق حدائق"><button type="button" data-faq-send>إرسال</button><button type="button" data-assistant-restart>ابدأ الاختيار</button>';
     }
   });
   options.addEventListener("click", (event) => {
@@ -513,15 +520,15 @@ function initAssistant(root, floating = false) {
     const input = options.querySelector("[data-faq-input]");
     const query = input.value.trim();
     if (!query) return;
-    addMessage(query, true);
-    const match = faq.find((item) =>
-      item.keys.some((key) => query.includes(key)),
-    );
-    addMessage(
-      match?.answer ||
-        "المعلومة هذي مو متوفرة عندي حاليًا. تواصل معنا عبر واتساب لمعرفة التفاصيل.",
-    );
+    addMessage(escapeHtml(query), true);
+    addMessage(answerQuestion(query));
     input.value = "";
+  });
+  options.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && event.target.matches("[data-faq-input]")) {
+      event.preventDefault();
+      options.querySelector("[data-faq-send]")?.click();
+    }
   });
   actions.addEventListener("click", (event) => {
     if (!event.target.closest("[data-assistant-whatsapp]")) return;
@@ -529,7 +536,7 @@ function initAssistant(root, floating = false) {
     const picks = assistantState.recommendations
       .map(
         (product, index) =>
-          `${index + 1}. ${product.name} — ${money(product.price)}`,
+          `${index + 1}. ${product.name} — ${moneyText(product.price)}\n${new URL(`/products/${product.slug}/`, location.origin).href}`,
       )
       .join("\n");
     const message = `مرحبًا، استخدمت مساعد ArchiCiva وهذه اختياراتي:\n\nالمكان: ${a.place}\nالمساحة: ${a.space}\nالنوع: ${a.type}\nالميزانية: ${a.budget} ريال\n\nالمنتجات المقترحة:\n${picks}\n\nأرغب في معرفة التفاصيل المتاحة.`;

@@ -87,7 +87,7 @@ export function layout({
   noindex = false,
 }) {
   const canonical = abs(path);
-  const assetVersion = "20261029-49";
+  const assetVersion = "20261030-50";
   const all = [
     {
       "@context": "https://schema.org",
@@ -108,6 +108,7 @@ export function layout({
       currency,
       imageName,
       subcategory,
+      category,
       size,
       color,
       material,
@@ -124,6 +125,7 @@ export function layout({
       currency,
       image: `/assets/images/products/${imageName}-480.webp`,
       subcategory,
+      category,
       size,
       color,
       material,
