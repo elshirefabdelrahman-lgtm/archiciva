@@ -332,11 +332,19 @@ export function productPage(p) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Product",
+    "@id": abs(`/products/${p.slug}/#product`),
+    url: abs(`/products/${p.slug}/`),
     name: p.name,
     image: [abs(image(p, 800))],
     description: p.shortDescription,
     sku: p.id,
     brand: { "@type": "Brand", name: "ArchiCiva" },
+    offers: {
+      "@type": "Offer",
+      url: abs(`/products/${p.slug}/`),
+      priceCurrency: p.currency || site.currency,
+      price: p.price,
+    },
   };
   const content = `${breadcrumb([
     { name: "الرئيسية", href: "/" },
