@@ -1,15 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { products } from "../src/data/products.js";
-import { categories } from "../src/data/categories.js";
+import { products, categories } from "../src/data/catalog.js";
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const dist=path.join(root,"dist");
 const errors=[];
 const required=["id","name","slug","category","subcategory","price","currency","image","images","imageName","alt","shortDescription","description","material","color","size","dimensions","features","uses","tags","relatedProducts","complementaryProducts","seoTitle","seoDescription"];
 const seenIds=new Set(),seenSlugs=new Set();
-for(const product of products){for(const key of required)if(!(key in product))errors.push(`${product.id||"unknown"}: missing ${key}`);if(seenIds.has(product.id))errors.push(`Duplicate id ${product.id}`);if(seenSlugs.has(product.slug))errors.push(`Duplicate slug ${product.slug}`);seenIds.add(product.id);seenSlugs.add(product.slug);if(!categories.some(category=>category.id===product.subcategory))errors.push(`${product.id}: invalid category`);if(!Number.isInteger(product.price)||product.price<=0)errors.push(`${product.id}: invalid price`);if(!fs.existsSync(path.join(root,product.image)))errors.push(`${product.id}: missing source image`);for(const width of [480,800])if(!fs.existsSync(path.join(dist,"assets/images/products",`${product.imageName}-${width}.webp`)))errors.push(`${product.id}: missing WebP ${width}`);}
+for(const product of products){for(const key of required)if(!(key in product))errors.push(`${product.id||"unknown"}: missing ${key}`);if(seenIds.has(product.id))errors.push(`Duplicate id ${product.id}`);if(seenSlugs.has(product.slug))errors.push(`Duplicate slug ${product.slug}`);seenIds.add(product.id);seenSlugs.add(product.slug);if(!categories.some(category=>category.id===product.subcategory))errors.push(`${product.id}: invalid category`);if(!Number.isFinite(product.price)||product.price<=0)errors.push(`${product.id}: invalid price`);if(!product.displayImage && !fs.existsSync(path.join(root,product.image||"missing")))errors.push(`${product.id}: missing source image`);for(const width of [480,800])if(!product.displayImage && !fs.existsSync(path.join(dist,"assets/images/products",`${product.imageName}-${width}.webp`)))errors.push(`${product.id}: missing WebP ${width}`);}
 const htmlFiles=[];const walk=(dir)=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const target=path.join(dir,entry.name);entry.isDirectory()?walk(target):entry.name.endsWith(".html")&&htmlFiles.push(target);}};if(fs.existsSync(dist))walk(dist);else errors.push("dist does not exist; run npm run build");
 for(const file of htmlFiles){
   const html=fs.readFileSync(file,"utf8");

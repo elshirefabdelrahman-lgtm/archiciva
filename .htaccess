@@ -3,8 +3,9 @@ DirectoryIndex index.html
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
-RewriteRule ^(?:src|scripts|source-assets|node_modules|dist|\.git)(?:/|$) - [F,NC]
+RewriteRule ^(?:src|scripts|source-assets|node_modules|dist|supabase|\.github|\.git)(?:/|$) - [F,NC]
 RewriteRule ^(?:package(?:-lock)?\.json|README\.md|\.hostinger-output\.json)$ - [F,NC]
+RewriteRule ^(?:\.env(?:\..*)?|\.hostinger-git-paths|PROJECT_HANDOVER\.md)$ - [F,NC]
 </IfModule>
 
 <IfModule mod_headers.c>

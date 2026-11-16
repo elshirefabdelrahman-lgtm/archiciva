@@ -1,15 +1,20 @@
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { site } from "../src/config/site.js";
-import { categories, categoryGroups } from "../src/data/categories.js";
-import { products } from "../src/data/products.js";
+import { categories, categoryGroups, products } from "../src/data/catalog.js";
+import { build as bundle } from "esbuild";
+import { categories as legacyCategories, categoryGroups as legacyGroups } from '../src/data/categories.js';
+import { products as legacyProducts } from '../src/data/products.js';
 import { homePage, categoryPage, groupPage, productPage, listingPage, staticPage, cartPage, finderPage, customDesignPage } from "../src/templates/render.js";
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const dist=path.join(root,"dist");
 const ensure=p=>fs.mkdirSync(p,{recursive:true});
+const publishedCategoryPaths=new Set([...categories,...categoryGroups].map(c=>c.slug));
+const hiddenCategoryPaths=[...legacyCategories,...legacyGroups].map(c=>c.slug).filter(slug=>!publishedCategoryPaths.has(slug));
 const whatsappGreeting=encodeURIComponent("مرحبًا، أود الاستفسار عن منتجات ArchiCiva");
 const instagramIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>';
 const linkedinIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="4" height="12"/><circle cx="5" cy="5" r="2"/><path d="M11 21V9h4v2c1-1.5 2.5-2.4 4.2-2.1 1.8.3 2.8 1.8 2.8 4.4V21h-4v-6.6c0-1.4-.5-2.4-1.7-2.4-1.4 0-1.9 1.1-1.9 2.7V21Z"/></svg>';
@@ -36,6 +41,7 @@ const finalizeHtml=(html,route)=>{
   const depth=route==="/"?0:route.split("/").filter(Boolean).length;
   const baseHref=depth?"../".repeat(depth):"./";
   const fileNavigation=`<script>if(location.protocol==="file:"){document.addEventListener("click",function(event){const link=event.target.closest("a[href]");if(!link)return;const raw=link.getAttribute("href");if(!raw||raw.startsWith("http")||raw.startsWith("mailto:")||raw.startsWith("tel:")||raw.startsWith("#"))return;event.preventDefault();const clean=raw.replace(/^\\//,"").split("#")[0].split("?")[0];const target=clean===""?"index.html":clean.endsWith("/")?clean+"index.html":clean;location.href=new URL(target,document.baseURI).href;});}</script>`;
+  for(const slug of hiddenCategoryPaths){const escaped=slug.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');html=html.replace(new RegExp(`<a\\b[^>]*href="/${escaped}/"[^>]*>[\\s\\S]*?</a>`,'g'),'');}
   return html
   .replace("<head>",`<head><base href="${baseHref}">${fileNavigation}`)
   .replace('<a href="/about/">من نحن</a></nav>', '<a href="/about/">من نحن</a><a href="/wholesale/">بيع جملة للتجار وأصحاب المشاريع</a></nav>')
@@ -67,10 +73,12 @@ const write=(route,html)=>{const target=path.join(dist,route.replace(/^\//,""));
 const copy=(source,target)=>{ensure(path.dirname(target));fs.copyFileSync(source,target);};
 
 fs.rmSync(dist,{recursive:true,force:true});ensure(dist);
+fs.writeFileSync(path.join(dist,'catalog-hash.txt'),crypto.createHash('sha256').update(JSON.stringify({products,categories,categoryGroups})).digest('hex')+'\n');
 copy(path.join(root,"source-assets/video/archiciva-ad.mp4"),path.join(dist,"assets/video/archiciva-ad.mp4"));
 copy(path.join(root,"src/styles/main.css"),path.join(dist,"assets/styles/main.css"));
 copy(path.join(root,"src/styles/overrides.css"),path.join(dist,"assets/styles/overrides.css"));
-copy(path.join(root,"src/scripts/app.js"),path.join(dist,"assets/scripts/app.js"));
+await bundle({entryPoints:[path.join(root,"src/scripts/app.js"),path.join(root,"src/scripts/admin.js")],bundle:true,format:"esm",outdir:path.join(dist,"assets/scripts"),target:"es2022",supported:{"template-literal":false},minify:true});
+copy(path.join(root,"src/styles/admin.css"),path.join(dist,"assets/styles/admin.css"));
 copy(path.join(root,"src/assets/saudi-riyal-symbol.svg"),path.join(dist,"assets/icons/saudi-riyal-symbol.svg"));
 copy(path.join(root,"node_modules/@fontsource-variable/alexandria/files/alexandria-arabic-wght-normal.woff2"),path.join(dist,"assets/fonts/alexandria-arabic.woff2"));
 copy(path.join(root,"node_modules/@fontsource-variable/alexandria/files/alexandria-latin-wght-normal.woff2"),path.join(dist,"assets/fonts/alexandria-latin.woff2"));
@@ -82,7 +90,10 @@ for(const name of ["pots","basins","fountains","waterfalls","ad-poster"]){
   ensure(path.dirname(target));
   jobs.push(sharp(source).resize({width:name==="ad-poster"?1280:900,withoutEnlargement:true}).webp({quality:83,effort:5}).toFile(target));
 }
-for(const p of products){
+// Keep historical image URLs used by existing WhatsApp requests, including hidden products.
+const localImageProducts=[...new Map([...legacyProducts,...products].filter(p=>p.image&&fs.existsSync(path.join(root,p.image))).map(p=>[p.imageName,p])).values()];
+for(const p of localImageProducts){
+  if(!p.image || !fs.existsSync(path.join(root,p.image))) continue;
   const source=path.join(root,p.image);
   for(const width of [480,800]){
     const height=width===480?524:874;
@@ -130,6 +141,8 @@ for(const group of categoryGroups)write(`/${group.slug}/`,groupPage(group));
 for(const category of categories)if(!categoryGroups.some(group=>group.slug===category.slug))write(`/${category.slug}/`,categoryPage(category));
 for(const p of products)write(`/products/${p.slug}/`,productPage(p));
 write("/cart/",cartPage());
+write("/admin/",staticPage({title:"صفحة الإدارة",description:"لوحة إدارة متجر ArchiCiva",path:"/admin/",body:'<link rel="stylesheet" href="/assets/styles/admin.css"><div class="admin-shell"><div id="admin-message" role="status" aria-live="polite"></div><div id="admin-root"><h1>صفحة الإدارة</h1><p>جارٍ التحقق من الجلسة…</p></div></div><script type="module" src="/assets/scripts/admin.js"></script>'}).replace('<head>','<head><meta name="robots" content="noindex,nofollow">').replace('<body class="','<body class="admin-page '));
+fs.writeFileSync(path.join(dist,"catalog-version.json"),JSON.stringify(Object.fromEntries(products.map(p=>[p.id,p.version]))));
 write("/product-finder/",finderPage());
 write("/custom-design/",customDesignPage());
 write("/about/",staticPage({title:"من نحن",description:"شركة تشييد العمارة العربية للتشطيبات والـFit-Out والأعمال الخشبية والأثاث والمنتجات المصنوعة من الفيبر جلاس.",path:"/about/",body:`<div class="about-story-grid"><article class="about-story-card"><span class="eyebrow">01</span><h2>نبذة عن الشركة</h2><p>شركة <strong>تشييد العمارة العربية</strong> هي شركة رائدة في مجال <strong>التشطيبات والـFit-Out والأعمال الخشبية والأثاث</strong>، بالإضافة إلى تقديم منتجات <strong>ديكورية وزراعية مصنوعة من الفيبر جلاس</strong> للمساحات الداخلية والخارجية.</p><p>نؤمن بأن <strong>التفاصيل تصنع الفرق</strong>، لذلك نحرص على تقديم حلول متكاملة تجمع بين <strong>الجودة العالية، والتصميم العصري، والدقة في التنفيذ</strong>، لتلبية احتياجات عملائنا وتحويل أفكارهم إلى مساحات مميزة تجمع بين الجمال والوظيفية.</p></article><article class="about-story-card"><span class="eyebrow">02</span><h2>من نحن</h2><p>شركة متخصصة في <strong>أعمال التشطيبات والـFit-Out والأعمال الخشبية والأثاث</strong>، مع تقديم مجموعة متنوعة من <strong>المنتجات الديكورية والزراعية المصنوعة من الفيبر جلاس</strong>، والمصممة لتناسب المساحات الداخلية والخارجية.</p><p>نسعى إلى تقديم حلول تجمع بين <strong>التصميم المميز، جودة الخامات، ودقة التنفيذ</strong>، لنمنح كل مساحة طابعًا خاصًا يعكس ذوق واحتياجات عملائنا.</p></article></div>`}))
@@ -138,7 +151,7 @@ write("/faq/",staticPage({title:"الأسئلة الشائعة",description:"إ�
 write("/shipping-returns/",staticPage({title:"سياسة الاستبدال والاسترجاع",description:"ضوابط الاستبدال والاسترجاع لدى شركة تشييد العمارة العربية داخل المملكة ودول الخليج.",path:"/shipping-returns/",body:`<header class="policy-intro"><span class="eyebrow">شركة تشييد العمارة العربية</span><h2>سياسة واضحة لحماية حقوق العميل</h2><p>تهدف هذه السياسة إلى توضيح ضوابط الاستبدال والاسترجاع للمنتجات التي يتم شراؤها من شركة تشييد العمارة، بما يضمن وضوح الإجراءات والحقوق والالتزامات بين الشركة والعميل.</p></header><div class="policy-sections"><article><span class="policy-number">01</span><div><h2>الاستبدال والاسترجاع داخل المملكة العربية السعودية</h2><ul><li>يحق للعميل طلب استرجاع أو استبدال المنتج خلال خمسة أيام عمل من تاريخ استلام الطلب، وفقاً للشروط الواردة في هذه السياسة.</li><li>يشترط لقبول طلب الاسترجاع أو الاستبدال أن يكون المنتج بحالته الأصلية وغير مستخدم.</li><li>يجب أن يكون المنتج محفوظاً في تغليفه الأصلي، مع تقديم صور توضح حالة المنتج قبل إعادته إلى الشركة.</li></ul></div></article><article><span class="policy-number">02</span><div><h2>تكاليف الشحن</h2><ul><li>في حالة الاسترجاع، يتحمل العميل تكلفة إعادة المنتج إلى الشركة، ويتم خصم تكلفة الشحن ذات الصلة من المبلغ المسترد عند انطباق شروط الاسترجاع.</li><li>في حالة الاستبدال، يتحمل العميل تكلفة شحن المنتج إلى الشركة، وكذلك تكلفة شحن المنتج البديل إليه.</li></ul></div></article><article><span class="policy-number">03</span><div><h2>إجراءات الاسترجاع والاستبدال</h2><ul><li>يبدأ تنفيذ طلب الاسترجاع أو الاستبدال بعد وصول المنتج إلى الشركة وإجراء الفحص اللازم للتأكد من مطابقته لشروط السياسة.</li><li>بعد اعتماد الطلب، يتم استرداد المبلغ أو تجهيز المنتج البديل وفقاً للحالة والاتفاق مع العميل.</li><li>تستغرق معالجة طلبات الاسترجاع عادةً من 7 إلى 14 يوم عمل بعد استلام المنتج وفحصه، بحسب إجراءات المعالجة وطريقة الدفع.</li></ul></div></article><article><span class="policy-number">04</span><div><h2>الحالات المستثناة</h2><ul><li>لا يُقبل الاسترجاع أو الاستبدال إذا كان المنتج قد تم استخدامه أو تعرض لتغيير يؤثر على حالته الأصلية.</li><li>يكون الاستبدال بسبب وجود عيب أو تلف مثبت في المنتج، مع مراعاة إجراءات الفحص والتحقق.</li><li>المنتجات المصنّعة أو المنفذة حسب طلب العميل، بما في ذلك المنتجات المفصلة وفق مقاسات أو مواصفات أو رغبات خاصة، لا تكون قابلة للاسترجاع أو الاستبدال ما لم يوجد عيب أو خطأ من الشركة.</li><li>رسوم خدمات التركيب، إن وجدت، غير قابلة للاسترداد.</li></ul></div></article><article><span class="policy-number">05</span><div><h2>طلبات الاستبدال والاسترجاع لدول الخليج</h2><ul><li>المنتجات المشحونة إلى دول الخليج غير قابلة للاسترجاع، ويقتصر الاستبدال على الحالات التي يثبت فيها وجود عيب أو تلف في المنتج.</li><li>يتم تقييم الحالة بعد استلام البلاغ والمستندات أو الصور المطلوبة، ثم تحديد الإجراء المناسب.</li></ul></div></article><article><span class="policy-number">06</span><div><h2>المبالغ المدفوعة عبر خدمات الدفع بالتقسيط</h2><ul><li>في حال إتمام عملية الشراء من خلال خدمة دفع بالتقسيط أو وسيط دفع، قد تُخصم الرسوم التي تم تحصيلها من جهة الدفع، بالإضافة إلى تكاليف الشحن، وفقاً لشروط مزود الخدمة وطبيعة العملية.</li></ul></div></article><article><span class="policy-number">07</span><div><h2>التواصل وتقديم الطلب</h2><ul><li>يجب على العميل التواصل مع شركة تشييد العمارة خلال المدة المحددة في هذه السياسة لتقديم طلب الاسترجاع أو الاستبدال.</li><li>يفضل إرفاق رقم الطلب وصور المنتج وحالته وأي معلومات تساعد على سرعة دراسة الطلب.</li><li>تحتفظ الشركة بحق التحقق من حالة المنتج قبل اعتماد أي طلب استرجاع أو استبدال.</li></ul></div></article></div>`}))
 write("/privacy/",staticPage({title:"سياسة الخصوصية والاستخدام",description:"نوضح لك هنا كيفية جمع واستخدام وحماية معلوماتك أثناء استخدام موقع شركة تشييد العمارة.",path:"/privacy/",body:`<div class="privacy-layout">
 <section class="privacy-card privacy-card--intro"><header>${privacyIcon('<path d="M12 3 5 6v5c0 4.8 2.9 8.3 7 10 4.1-1.7 7-5.2 7-10V6z"/><path d="m9.5 12 1.7 1.7 3.6-4"/>')}<div><span class="eyebrow">الخصوصية أولًا</span><h2>سياسة الخصوصية</h2></div></header><p>بيان سياسة الخصوصية هذا يوضح كيف تستخدم وتحمي شركة تشييد العمارة أي معلومات يتم جمعها عند استخدام هذا الموقع. وتلتزم شركة تشييد العمارة بضمان حماية خصوصيتك ومعلوماتك. حيث سوف يطلب منك تقديم بعض المعلومات التي يمكن التعرف من خلالها على هويتك عند استخدام هذا الموقع، ولن يتم استخدام هذه المعلومات إلا وفقاً لبيان سياسة الخصوصية.</p><p>علماً أنه قد تتغير سياسة الخصوصية لشركة تشييد العمارة من وقت لآخر عن طريق تحديث هذه الصفحة. فيجب عليك مراجعة هذه الصفحة من وقت لآخر للتأكد من مناسبة هذه التغييرات.</p></section>
-<section class="privacy-card privacy-card--current"><header>${privacyIcon('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M8 12h8M8 16h5"/>')}<div><h2>استخدام الموقع الحالي</h2></div></header><p>تعمل السلة محليًا داخل متصفحك. لا يرسل الموقع بيانات الطلب إلى خادم؛ تُجهز رسالة واتساب لتراجعها قبل إرسالها.</p><p>لا توجد بوابة دفع أو حسابات مستخدمين في النسخة الحالية.</p></section>
+<section class="privacy-card privacy-card--current"><header>${privacyIcon('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M8 12h8M8 16h5"/>')}<div><h2>استخدام الموقع الحالي</h2></div></header><p>تعمل السلة محليًا داخل متصفحك. لا يرسل الموقع بيانات الطلب إلى خادم؛ تُجهز رسالة واتساب لتراجعها قبل إرسالها.</p><p>لا توجد بوابة دفع أو حسابات عملاء في النسخة الحالية. تستخدم لوحة الإدارة Supabase لتسجيل دخول المسؤولين المصرح لهم وإدارة بيانات المنتجات وصورها، وتحتفظ بجلسة الدخول في متصفح المسؤول حتى تسجيل الخروج.</p></section>
 <section class="privacy-card privacy-card--contact"><header>${privacyIcon('<path d="M4 13v-2a8 8 0 0 1 16 0v2"/><path d="M4 13h3v6H5a2 2 0 0 1-2-2v-2a2 2 0 0 1 1-2ZM20 13h-3v6h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-1-2ZM17 19c0 1.1-.9 2-2 2h-3"/>')}<div><h2>للاستفسارات والتواصل</h2><p>فريق خدمة العملاء متاح لاستقبال استفساراتك عبر الهاتف أو واتساب.</p></div></header><div class="privacy-contact-actions"><a href="tel:+966582873279"><span>رقم جوال خدمة العملاء</span><strong dir="ltr">0582873279</strong></a><a class="privacy-whatsapp" href="https://wa.me/966582873279" target="_blank" rel="noopener"><span>واتس آب مباشرة</span><strong>تواصل معنا عبر واتساب</strong></a></div></section>
 <div class="privacy-grid">
 <section class="privacy-card"><header>${privacyIcon('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0M19 5v6M16 8h6"/>')}<div><h2>ما يتم جمعه من معلومات</h2><p>قد نقوم بجمع المعلومات التالية:</p></div></header><ul class="privacy-list"><li>الاسم</li><li>معلومات الاتصال بما في ذلك عنوان البريد الإلكتروني</li><li>معلومات ديموغرافية مثل الرمز البريدي، والبضائع المفضلة واهتماماتك</li><li>معلومات أخرى ذات صلة لاستطلاعات العملاء و/أو العروض</li></ul></section>
@@ -158,7 +171,8 @@ write("/privacy/",staticPage({title:"سياسة الخصوصية والاستخ�
 write("/wholesale/",staticPage({title:"بيع جملة للتجار وأصحاب المشاريع",description:"تواصل مع ArchiCiva لطلبات الجملة وتجهيز مشاريع المراكن والأحواض والنوافير والشلالات.",path:"/wholesale/",body:`<h2>طلبات الجملة والمشاريع</h2><p>نوفر للتجار وأصحاب المشاريع مجموعة من المراكن والأحواض الزراعية والنوافير والشلالات. أرسل لنا نوع المنتجات والكميات والمقاسات المطلوبة ومدينة التسليم، وسنتواصل معك لمراجعة التفاصيل وعرض السعر.</p><p><a class="button button--wide" href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent("مرحبًا، أود الاستفسار عن بيع الجملة للتجار وأصحاب المشاريع. المنتجات المطلوبة: ")}" target="_blank" rel="noopener">تواصل معنا عبر واتساب</a></p><div class="wholesale-email-actions"><a class="button" href="mailto:b2b@archiciva.store">البريد الإلكتروني لطلبات الجملة</a><a class="button" href="mailto:sales@archiciva.store">البريد الإلكتروني للمبيعات</a></div>`}));
 
 const urls=["/","/products/","/product-finder/","/planters/pots/","/planters/basins/","/custom-design/","/about/","/contact/","/wholesale/","/faq/","/shipping-returns/","/privacy/",...categoryGroups.map(x=>`/${x.slug}/`),...categories.map(x=>`/${x.slug}/`),...products.map(x=>`/products/${x.slug}/`)];
+for(const slug of hiddenCategoryPaths)write(`/${slug}/`,staticPage({title:'القسم غير متاح',description:'هذا القسم غير متاح حاليًا.',path:`/${slug}/`,body:'<p>هذا القسم غير متاح حاليًا. يمكنك تصفح المنتجات المتوفرة من صفحة كل المنتجات.</p>'}).replace('<head>','<head><meta name="robots" content="noindex,follow">'));
 fs.writeFileSync(path.join(dist,"sitemap.xml"),`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(urls)].map(url=>`  <url><loc>${site.url}${url}</loc></url>`).join("\n")}\n</urlset>\n`);
-fs.writeFileSync(path.join(dist,"robots.txt"),`User-agent: *\nAllow: /\nDisallow: /cart/\nSitemap: ${site.url}/sitemap.xml\n`);
+fs.writeFileSync(path.join(dist,"robots.txt"),`User-agent: *\nAllow: /\nDisallow: /cart/\nDisallow: /admin/\nSitemap: ${site.url}/sitemap.xml\n`);
 fs.writeFileSync(path.join(dist,"404.html"),finalizeHtml(staticPage({title:"الصفحة غير موجودة",description:"لم نتمكن من العثور على الصفحة المطلوبة.",path:"/404/",body:`<p>قد يكون الرابط تغير أو كُتب بطريقة غير صحيحة.</p><p><a class="button" href="/">العودة للرئيسية</a></p>`}),"/"));
 console.log(`Built ${products.length} products and ${new Set(urls).size} indexable routes.`);

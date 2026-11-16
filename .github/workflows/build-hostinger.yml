@@ -1,6 +1,8 @@
 name: Build Hostinger site
 
 on:
+  schedule:
+    - cron: '*/5 * * * *'
   push:
     branches: [main]
     paths:
@@ -15,6 +17,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: hostinger-main
+  cancel-in-progress: false
+
 jobs:
   build:
     if: github.actor != 'github-actions[bot]'
@@ -28,14 +34,21 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npm run build
-      - run: npm run validate
-      - run: npm run sync:hostinger
+      - name: Check published catalog
+        id: catalog
+        run: node scripts/catalog-changed.js
+      - if: github.event_name != 'schedule' || steps.catalog.outputs.changed == 'true'
+        run: npm run build
+      - if: github.event_name != 'schedule' || steps.catalog.outputs.changed == 'true'
+        run: npm run validate
+      - if: github.event_name != 'schedule' || steps.catalog.outputs.changed == 'true'
+        run: npm run sync:hostinger
       - name: Commit built website
+        if: github.event_name != 'schedule' || steps.catalog.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add --pathspec-from-file=.hostinger-git-paths
           if ! git diff --cached --quiet; then
             git commit -m "Build website for Hostinger"
             git push origin HEAD:main

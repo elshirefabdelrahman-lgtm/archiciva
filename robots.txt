@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /cart/
+Disallow: /admin/
 Sitemap: https://archiciva.store/sitemap.xml

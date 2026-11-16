@@ -1,21 +1,105 @@
+import { loadCatalog } from "../data/catalog-client.js";
 document.head.insertAdjacentHTML(
   "beforeend",
   "<style>[hidden]{display:none!important}</style>",
 );
-const products = window.__ARCHICIVA_PRODUCTS__ || [];
+let catalogReady = true;
+let products;
+try {
+  const catalog = await loadCatalog();
+  const response = await fetch("/catalog-version.json", {
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) throw Error("Published route inventory unavailable");
+  const built = await response.json();
+  // New products become discoverable only once their crawlable HTML route exists.
+  products = catalog.products
+    .filter((p) => Object.hasOwn(built, p.id))
+    .map((p) => ({ ...p, image: p.displayImage }));
+} catch (error) {
+  catalogReady = false;
+  products = window.__ARCHICIVA_PRODUCTS__ || [];
+  console.error("Catalog refresh failed", error);
+  document
+    .querySelectorAll("[data-add-to-cart], [data-checkout-form] button")
+    .forEach((b) => (b.disabled = true));
+  const warning = document.createElement("p");
+  warning.className = "container admin-message error";
+  warning.textContent =
+    "تعذر تحديث بيانات المنتجات. أعد تحميل الصفحة قبل إرسال الطلب.";
+  document.querySelector("main")?.prepend(warning);
+}
 const config = window.__ARCHICIVA_CONFIG__ || {};
-const normalizeArabic = (value) => String(value || "")
-  .toLowerCase().normalize("NFKD").replace(/[\u064b-\u065f\u0670]/g, "")
-  .replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
-  .replace(/[٠-٩]/g, (digit) => "٠١٢٣٤٥٦٧٨٩".indexOf(digit))
-  .replace(/[^\p{L}\p{N}]+/gu, " ").trim();
-const productText = (product) => normalizeArabic([product.name, product.shortDescription, product.color, product.material, product.subcategory, ...(product.tags || []), ...(product.uses || [])].join(" "));
+const normalizeArabic = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u064b-\u065f\u0670]/g, "")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/[٠-٩]/g, (digit) => "٠١٢٣٤٥٦٧٨٩".indexOf(digit))
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+const productText = (product) =>
+  normalizeArabic(
+    [
+      product.name,
+      product.shortDescription,
+      product.color,
+      product.material,
+      product.subcategory,
+      ...(product.tags || []),
+      ...(product.uses || []),
+    ].join(" "),
+  );
 const searchProducts = (query, limit = 6) => {
-  const words = normalizeArabic(query).split(/\s+/).filter((word) => word && !["سعر", "اسعار", "بكم", "كم", "عندكم", "ابغى", "ابي", "عايز", "منتج", "المنتج", "من", "عن", "هل", "في", "ريال"].includes(word));
+  const words = normalizeArabic(query)
+    .split(/\s+/)
+    .filter(
+      (word) =>
+        word &&
+        ![
+          "سعر",
+          "اسعار",
+          "بكم",
+          "كم",
+          "عندكم",
+          "ابغى",
+          "ابي",
+          "عايز",
+          "منتج",
+          "المنتج",
+          "من",
+          "عن",
+          "هل",
+          "في",
+          "ريال",
+        ].includes(word),
+    );
   if (!words.length) return [];
-  return products.filter((product) => words.every((word) => productText(product).includes(word))).slice(0, limit);
+  return products
+    .filter((product) =>
+      words.every((word) => productText(product).includes(word)),
+    )
+    .slice(0, limit);
 };
-const escapeHtml = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+const escapeHtml = (value) =>
+  String(value || "").replace(
+    /[&<>"']/g,
+    (char) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        char
+      ],
+  );
+const dimensionText = (values = {}) =>
+  Object.entries(values)
+    .map(
+      ([key, value]) =>
+        `${{ lengthCm: "الطول", widthCm: "العرض", heightCm: "الارتفاع", diameterCm: "القطر" }[key] || key}: ${value} سم`,
+    )
+    .join(" — ");
 const fileMode = location.protocol === "file:";
 const assetPath = (value) => (fileMode ? value.replace(/^\//, "") : value);
 const pagePath = (value) =>
@@ -24,27 +108,219 @@ const pagePath = (value) =>
     : value;
 const CART_KEY = "archiciva-cart-v1";
 const number = (value) =>
-  new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
+  new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
 const money = (value) =>
   `<span class="money"><span>${number(value)}</span><img class="sar-symbol" src="${assetPath("/assets/icons/saudi-riyal-symbol.svg")}" width="14" height="16" alt="ريال سعودي"></span>`;
-const pricing = (product, quantity = 1) =>
-  `<div class="pricing pricing--compact"><div class="pricing__current"><span class="pricing__label">بعد الخصم</span><strong>${money(product.price * quantity)}</strong></div><div class="pricing__meta"><span class="pricing__before">قبل الخصم</span><del>${money(product.originalPrice * quantity)}</del><span class="discount-badge">خصم 20%</span></div></div>`;
+const pricing = (p, q = 1) =>
+  `<div class="pricing pricing--compact"><strong>${money(p.price * q)}</strong>${p.originalPrice > p.price ? `<del>${money(p.originalPrice * q)}</del><span class="discount-badge">خصم ${Math.round((1 - p.price / p.originalPrice) * 10000) / 100}%</span>` : ""}</div>`;
 const moneyText = (value) => `${number(value)} ريال سعودي`;
 const safeQuantity = (value) => {
   const quantity = Number(value);
-  return Number.isFinite(quantity) ? Math.max(1, Math.min(99, Math.trunc(quantity))) : 1;
+  return Number.isFinite(quantity)
+    ? Math.max(1, Math.min(99, Math.trunc(quantity)))
+    : 1;
 };
+for (const card of document.querySelectorAll("[data-product-card]")) {
+  const slug = card
+    .querySelector("a")
+    ?.getAttribute("href")
+    ?.match(/products\/([^/]+)\//)?.[1];
+  const p = products.find((p) => p.slug === slug);
+  if (!p) {
+    card.remove();
+    continue;
+  }
+  card.dataset.price = p.price;
+  card.querySelector(".pricing")?.insertAdjacentHTML("afterend", pricing(p));
+  card.querySelector(".pricing")?.remove();
+  const img = card.querySelector("img");
+  if (img) {
+    img.src = p.image;
+    img.removeAttribute("srcset");
+  }
+}
+const detail = document.querySelector("[data-product-gallery]");
+if (detail) {
+  const p = products.find((p) => p.id === detail.dataset.productGallery);
+  if (!p) {
+    document.querySelector(".product-detail").innerHTML =
+      "<h1>هذا المنتج غير متاح حاليًا</h1>";
+    document.querySelector(".product-tabs")?.remove();
+  } else {
+    const info = document.querySelector(".product-info");
+    info.querySelector("h1").textContent = p.name;
+    info.querySelector(".product-price").innerHTML = pricing(p);
+    info.querySelector(".lead").textContent = p.shortDescription;
+    if (p.contentEdited) {
+      const article = document.querySelector(".product-tabs article");
+      article.innerHTML =
+        "<h2>تفاصيل المنتج</h2><p>" +
+        escapeHtml(p.description) +
+        "</p><p>" +
+        escapeHtml(p.secondaryDescription) +
+        "</p><ul>" +
+        p.features.map((f) => "<li>" + escapeHtml(f) + "</li>").join("") +
+        "</ul>";
+    }
+    for (const script of document.querySelectorAll(
+      'script[type="application/ld+json"]',
+    )) {
+      try {
+        const data = JSON.parse(script.textContent);
+        const values = Array.isArray(data) ? data : [data];
+        for (const value of values)
+          if (value["@type"] === "Product") {
+            value.name = p.name;
+            value.description = p.shortDescription;
+            value.image = p.gallery.map(
+              (i) => new URL(i.url, location.origin).href,
+            );
+            if (value.offers) value.offers.price = p.price;
+          }
+        script.textContent = JSON.stringify(data);
+      } catch {}
+    }
+    let picker = info.querySelector("[data-color-picker]");
+    if (!p.colorOptions.length) {
+      picker?.remove();
+      picker = null;
+    } else if (!picker) {
+      picker = document.createElement("fieldset");
+      picker.dataset.colorPicker = "";
+      picker.className = "product-colors";
+      info.querySelector(".quantity-add").before(picker);
+    }
+    if (picker)
+      picker.innerHTML =
+        '<legend>اختر اللون</legend><div class="product-colors__options">' +
+        p.colorOptions
+          .map(
+            (c) =>
+              '<label class="color-option"><input type="radio" name="product-color" value="' +
+              escapeHtml(c.name) +
+              '" data-product-color><span class="color-option__swatch" style="--swatch:' +
+              c.hex +
+              '"></span><span>' +
+              escapeHtml(c.name) +
+              "</span></label>",
+          )
+          .join("") +
+        "</div>";
+    const size = info.querySelector("[data-product-size]");
+    if (size)
+      size.innerHTML = p.sizeOptions
+        .map(
+          (s) =>
+            '<option value="' +
+            s.id +
+            '">' +
+            escapeHtml(
+              s.label +
+                (dimensionText(s.dimensions)
+                  ? " — " + dimensionText(s.dimensions)
+                  : ""),
+            ) +
+            "</option>",
+        )
+        .join("");
+    size?.addEventListener("change", () => {
+      const option = p.sizeOptions.find((s) => s.id === size.value);
+      let pill = info.querySelector(".dimension-pill");
+      if (!pill) {
+        pill = document.createElement("p");
+        pill.className = "dimension-pill";
+        size.parentElement.before(pill);
+      }
+      pill.textContent = dimensionText(option?.dimensions);
+      pill.hidden = !pill.textContent;
+    });
+    const draw = (color) => {
+      const colorId = p.colorOptions.find((c) => c.name === color)?.id;
+      let gallery = colorId
+        ? p.gallery.filter((i) => i.color_id === colorId)
+        : [];
+      const hasColorImages = gallery.length > 0;
+      if (!gallery.length) gallery = p.gallery.filter((i) => !i.color_id);
+      if (
+        !color &&
+        p.gallery[0]?.is_primary &&
+        !gallery.some((i) => i.id === p.gallery[0].id)
+      )
+        gallery.unshift(p.gallery[0]);
+      if (!gallery.length && !color) gallery = p.gallery.slice(0, 1);
+      const img = detail.querySelector("img");
+      if (gallery[0] && img) {
+        img.src = gallery[0].url;
+        img.removeAttribute("srcset");
+        img.alt = gallery[0].alt;
+      } else if (img) {
+        img.src = "/assets/images/brand/archiciva-mark-transparent.webp";
+        img.removeAttribute("srcset");
+        img.alt = "لا توجد صورة خاصة بهذا اللون";
+      }
+      detail.querySelector(".gallery-note")?.remove();
+      if (color && !hasColorImages) {
+        const note = document.createElement("p");
+        note.className = "gallery-note";
+        note.textContent = gallery.length
+          ? "الصورة العامة للمنتج؛ لا تتوفر صور خاصة باللون المحدد."
+          : "لا تتوفر صورة لهذا اللون. تواصل معنا للتأكد.";
+        detail.append(note);
+      }
+      detail.querySelector(".gallery-thumbs")?.remove();
+      const thumbs = document.createElement("div");
+      thumbs.className = "gallery-thumbs";
+      for (const i of gallery) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.setAttribute("aria-label", "عرض " + (i.alt || p.name));
+        const thumb = document.createElement("img");
+        thumb.src = i.url;
+        thumb.alt = i.alt;
+        b.append(thumb);
+        b.onclick = () => {
+          img.src = i.url;
+          img.alt = i.alt;
+        };
+        thumbs.append(b);
+      }
+      detail.append(thumbs);
+    };
+    draw("");
+    document.addEventListener("change", (e) => {
+      if (e.target.matches("[data-product-color]")) draw(e.target.value);
+    });
+  }
+}
 const getCart = () => {
   try {
     const stored = JSON.parse(localStorage.getItem(CART_KEY));
     if (!Array.isArray(stored)) return [];
     const cart = [];
     for (const item of stored) {
-      if (!products.some((product) => product.id === item?.id)) continue;
+      if (typeof item?.id !== "string") continue;
       const color = typeof item.color === "string" ? item.color : "";
-      const existing = cart.find((entry) => entry.id === item.id && (entry.color || "") === color);
-      if (existing) existing.quantity = Math.min(99, existing.quantity + safeQuantity(item.quantity));
-      else cart.push({ id: item.id, quantity: safeQuantity(item.quantity), ...(color ? { color } : {}) });
+      let sizeId = typeof item.sizeId === "string" ? item.sizeId : "";
+      const options = products.find((p) => p.id === item.id)?.sizeOptions;
+      if (!sizeId && options?.length === 1) sizeId = options[0].id;
+      const existing = cart.find(
+        (entry) =>
+          entry.id === item.id &&
+          (entry.color || "") === color &&
+          (entry.sizeId || "") === sizeId,
+      );
+      if (existing)
+        existing.quantity = Math.min(
+          99,
+          existing.quantity + safeQuantity(item.quantity),
+        );
+      else
+        cart.push({
+          id: item.id,
+          quantity: safeQuantity(item.quantity),
+          ...(color ? { color } : {}),
+          ...(sizeId ? { sizeId } : {}),
+        });
     }
     return cart;
   } catch {
@@ -70,16 +346,34 @@ const toast = (message) => {
   setTimeout(() => node.classList.remove("show"), 2200);
 };
 
-const cartItemKey = (item) => `${item.id}::${item.color || ""}`;
+const cartItemKey = (item) =>
+  `${item.id}::${item.color || ""}::${item.sizeId || ""}`;
 
-function addToCart(id, quantity = 1, color = "") {
+function addToCart(id, quantity = 1, color = "", sizeId = "") {
+  if (!catalogReady) return;
   if (!products.some((product) => product.id === id)) return;
+  const product = products.find((p) => p.id === id);
+  if (!sizeId && product.sizeOptions?.length === 1)
+    sizeId = product.sizeOptions[0].id;
   const cart = getCart();
   const existing = cart.find(
-    (item) => item.id === id && (item.color || "") === color,
+    (item) =>
+      item.id === id &&
+      (item.color || "") === color &&
+      (item.sizeId || "") === sizeId,
   );
-  if (existing) existing.quantity = Math.min(99, existing.quantity + safeQuantity(quantity));
-  else cart.push({ id, quantity: safeQuantity(quantity), ...(color ? { color } : {}) });
+  if (existing)
+    existing.quantity = Math.min(
+      99,
+      existing.quantity + safeQuantity(quantity),
+    );
+  else
+    cart.push({
+      id,
+      quantity: safeQuantity(quantity),
+      ...(color ? { color } : {}),
+      ...(sizeId ? { sizeId } : {}),
+    });
   saveCart(cart);
   toast(color ? `تمت إضافة المنتج باللون ${color}` : "تمت إضافة المنتج للسلة");
 }
@@ -90,7 +384,8 @@ document.addEventListener("click", (event) => {
     ? Number(document.querySelector("[data-product-quantity]")?.value || 1)
     : 1;
   const picker = document.querySelector("[data-color-picker]");
-  const color = document.querySelector("[data-product-color]:checked")?.value || "";
+  const color =
+    document.querySelector("[data-product-color]:checked")?.value || "";
   if (picker && !color) {
     toast("اختر اللون المطلوب أولًا");
     picker.classList.add("product-colors--attention");
@@ -98,11 +393,18 @@ document.addEventListener("click", (event) => {
     return;
   }
   picker?.classList.remove("product-colors--attention");
-  addToCart(button.dataset.addToCart, quantity, color);
+  addToCart(
+    button.dataset.addToCart,
+    quantity,
+    color,
+    document.querySelector("[data-product-size]")?.value || "",
+  );
 });
 document.addEventListener("change", (event) => {
   if (event.target.matches("[data-product-color]"))
-    document.querySelector("[data-color-picker]")?.classList.remove("product-colors--attention");
+    document
+      .querySelector("[data-color-picker]")
+      ?.classList.remove("product-colors--attention");
 });
 
 const menuButton = document.querySelector(".menu-toggle");
@@ -113,22 +415,28 @@ menuButton?.addEventListener("click", () => {
 });
 
 const backToTop = document.querySelector("[data-back-to-top]");
-const updateBackToTop = () => backToTop?.classList.toggle("is-visible", window.scrollY > 650);
+const updateBackToTop = () =>
+  backToTop?.classList.toggle("is-visible", window.scrollY > 650);
 window.addEventListener("scroll", updateBackToTop, { passive: true });
-backToTop?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+backToTop?.addEventListener("click", () =>
+  window.scrollTo({ top: 0, behavior: "smooth" }),
+);
 updateBackToTop();
 
 const homeAd = document.querySelector("[data-home-ad]");
 if (homeAd) {
-  const adObserver = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting && document.visibilityState === "visible") {
-        homeAd.play().catch(() => {});
-      } else {
-        homeAd.pause();
+  const adObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && document.visibilityState === "visible") {
+          homeAd.play().catch(() => {});
+        } else {
+          homeAd.pause();
+        }
       }
-    }
-  }, { threshold: 0.55 });
+    },
+    { threshold: 0.55 },
+  );
   adObserver.observe(homeAd);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") homeAd.pause();
@@ -136,17 +444,26 @@ if (homeAd) {
 }
 
 function setupAutoCarousels() {
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
   document.querySelectorAll("[data-auto-carousel]").forEach((carousel) => {
     const cards = [...carousel.children];
     if (cards.length < 3) return;
     let index = 0;
     let paused = false;
     let timer;
-    const scrollToIndex = () => carousel.scrollTo({ left: cards[index].offsetLeft, behavior: "smooth" });
+    const scrollToIndex = () =>
+      carousel.scrollTo({ left: cards[index].offsetLeft, behavior: "smooth" });
     const syncIndex = () => {
-      index = cards.reduce((closest, card, cardIndex) =>
-        Math.abs(card.offsetLeft - carousel.scrollLeft) < Math.abs(cards[closest].offsetLeft - carousel.scrollLeft) ? cardIndex : closest, 0);
+      index = cards.reduce(
+        (closest, card, cardIndex) =>
+          Math.abs(card.offsetLeft - carousel.scrollLeft) <
+          Math.abs(cards[closest].offsetLeft - carousel.scrollLeft)
+            ? cardIndex
+            : closest,
+        0,
+      );
     };
     const move = () => {
       if (paused) return;
@@ -159,8 +476,13 @@ function setupAutoCarousels() {
       clearInterval(timer);
       timer = setInterval(move, 3200);
     };
-    const pause = () => { paused = true; };
-    const resume = () => { paused = false; start(); };
+    const pause = () => {
+      paused = true;
+    };
+    const resume = () => {
+      paused = false;
+      start();
+    };
     carousel.addEventListener("pointerenter", pause);
     carousel.addEventListener("pointerleave", resume);
     carousel.addEventListener("touchstart", pause, { passive: true });
@@ -168,18 +490,22 @@ function setupAutoCarousels() {
     carousel.addEventListener("focusin", pause);
     carousel.addEventListener("focusout", resume);
     const shell = carousel.closest("[data-carousel-shell]");
-    shell?.querySelector("[data-carousel-prev]")?.addEventListener("click", () => {
-      syncIndex();
-      index = index <= 0 ? cards.length - 1 : index - 1;
-      scrollToIndex();
-      if (!reduceMotion) start();
-    });
-    shell?.querySelector("[data-carousel-next]")?.addEventListener("click", () => {
-      syncIndex();
-      index = index >= cards.length - 1 ? 0 : index + 1;
-      scrollToIndex();
-      if (!reduceMotion) start();
-    });
+    shell
+      ?.querySelector("[data-carousel-prev]")
+      ?.addEventListener("click", () => {
+        syncIndex();
+        index = index <= 0 ? cards.length - 1 : index - 1;
+        scrollToIndex();
+        if (!reduceMotion) start();
+      });
+    shell
+      ?.querySelector("[data-carousel-next]")
+      ?.addEventListener("click", () => {
+        syncIndex();
+        index = index >= cards.length - 1 ? 0 : index + 1;
+        scrollToIndex();
+        if (!reduceMotion) start();
+      });
     if (!reduceMotion) start();
   });
 }
@@ -227,9 +553,15 @@ function setupFilters() {
     const maxPrice = Number(price?.value || Infinity);
     let visible = cards.filter(
       (card) =>
-        (!words.length || words.every((word) => normalizeArabic(card.dataset.name).includes(word))) &&
+        (!words.length ||
+          words.every((word) =>
+            normalizeArabic(card.dataset.name).includes(word),
+          )) &&
         (!category?.value || card.dataset.category === category.value) &&
-        (!size?.value || card.dataset.size === size.value) &&
+        (!size?.value ||
+          (card.dataset.sizes
+            ? JSON.parse(card.dataset.sizes).includes(size.value)
+            : card.dataset.size === size.value)) &&
         Number(card.dataset.price) <= maxPrice,
     );
     cards.forEach((card) => (card.hidden = !visible.includes(card)));
@@ -263,6 +595,9 @@ function renderCart() {
   const container = document.querySelector("[data-cart-items]");
   if (!container) return;
   const cart = getCart();
+  const unavailable = cart.filter(
+    (entry) => !products.some((p) => p.id === entry.id),
+  );
   const rows = cart
     .map((entry) => ({
       entry,
@@ -274,9 +609,21 @@ function renderCart() {
   container.innerHTML = rows
     .map(
       ({ entry, product }) =>
-        `<article class="cart-item"><img src="${product.image}" width="90" height="95" alt=""><div><h3><a href="${pagePath(`/products/${product.slug}/`)}">${product.name}</a></h3>${entry.color ? `<p class="cart-item__color">اللون: <strong>${entry.color}</strong></p>` : ""}<small>سعر القطعة</small>${pricing(product)}<div class="cart-item__controls"><button type="button" data-cart-decrease="${encodeURIComponent(cartItemKey(entry))}" aria-label="تقليل الكمية">−</button><b>${entry.quantity}</b><button type="button" data-cart-increase="${encodeURIComponent(cartItemKey(entry))}" aria-label="زيادة الكمية">+</button><button class="remove-button" type="button" data-cart-remove="${encodeURIComponent(cartItemKey(entry))}" aria-label="حذف ${product.name} من السلة" title="حذف من السلة"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 4h4m-8 3 1 13h10l1-13M10 11v6m4-6v6"/></svg></button></div></div><div class="cart-item__total"><small>إجمالي ${entry.quantity} قطعة</small><strong>${money(product.price * entry.quantity)}</strong></div></article>`,
+        `<article class="cart-item"><img src="${product.image}" width="90" height="95" alt=""><div><h3><a href="${pagePath(`/products/${product.slug}/`)}">${escapeHtml(product.name)}</a></h3>${entry.color ? `<p class="cart-item__color">اللون: <strong>${escapeHtml(entry.color)}</strong></p>` : ""}${entry.sizeId ? `<p>المقاس: ${escapeHtml(product.sizeOptions?.find((s) => s.id === entry.sizeId)?.label || "مقاس لم يعد متاحًا")}</p>` : ""}<small>سعر القطعة</small>${pricing(product)}<div class="cart-item__controls"><button type="button" data-cart-decrease="${encodeURIComponent(cartItemKey(entry))}" aria-label="تقليل الكمية">−</button><b>${entry.quantity}</b><button type="button" data-cart-increase="${encodeURIComponent(cartItemKey(entry))}" aria-label="زيادة الكمية">+</button><button class="remove-button" type="button" data-cart-remove="${encodeURIComponent(cartItemKey(entry))}" aria-label="حذف ${escapeHtml(product.name)} من السلة" title="حذف من السلة"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 4h4m-8 3 1 13h10l1-13M10 11v6m4-6v6"/></svg></button></div></div><div class="cart-item__total"><small>إجمالي ${entry.quantity} قطعة</small><strong>${money(product.price * entry.quantity)}</strong></div></article>`,
     )
     .join("");
+  for (const entry of unavailable) {
+    const warning = document.createElement("article");
+    warning.className = "cart-item";
+    warning.innerHTML =
+      "<p>المنتج " +
+      escapeHtml(entry.id) +
+      ' لم يعد متاحًا. أزله من السلة قبل إرسال الطلب.</p><button class="button button--outline" data-cart-remove="' +
+      encodeURIComponent(cartItemKey(entry)) +
+      '">إزالة المنتج غير المتاح</button>';
+    container.append(warning);
+  }
+  if (unavailable.length) empty.hidden = true;
   const total = rows.reduce(
     (sum, row) => sum + row.product.price * row.entry.quantity,
     0,
@@ -293,8 +640,8 @@ document.addEventListener("click", (event) => {
   const cart = getCart();
   const key = decodeURIComponent(
     button.getAttribute("data-cart-increase") ||
-    button.getAttribute("data-cart-decrease") ||
-    button.getAttribute("data-cart-remove"),
+      button.getAttribute("data-cart-decrease") ||
+      button.getAttribute("data-cart-remove"),
   );
   const item = cart.find((entry) => cartItemKey(entry) === key);
   if (!item) return;
@@ -310,26 +657,79 @@ document.addEventListener("click", (event) => {
 });
 document
   .querySelector("[data-checkout-form]")
-  ?.addEventListener("submit", (event) => {
+  ?.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const checkoutForm = event.currentTarget;
+    if (!catalogReady) return;
+    const previous = products;
+    try {
+      products = (await loadCatalog()).products.map((p) => ({
+        ...p,
+        image: p.displayImage,
+      }));
+    } catch {
+      toast("تعذر تحديث الأسعار. حاول مرة أخرى قبل إرسال الطلب.");
+      return;
+    }
+    renderCart();
     const cart = getCart();
+    if (
+      cart.some((e) => {
+        const old = previous.find((p) => p.id === e.id),
+          now = products.find((p) => p.id === e.id);
+        return old && now && old.price !== now.price;
+      })
+    ) {
+      toast("تم تحديث الأسعار. راجع الإجمالي ثم أرسل الطلب مجددًا.");
+      return;
+    }
+    const invalid = cart.some((e) => {
+      const p = products.find((p) => p.id === e.id);
+      return (
+        !p ||
+        (p.sizeOptions.length > 1 && !e.sizeId) ||
+        (e.color && !p.availableColors.includes(e.color)) ||
+        (e.sizeId && !p.sizeOptions.some((s) => s.id === e.sizeId))
+      );
+    });
+    if (invalid) {
+      toast(
+        "يوجد منتج أو لون أو مقاس لم يعد متاحًا. احذف السطر وأعد اختيار المنتج.",
+      );
+      return;
+    }
     if (!cart.length) {
       toast("أضف منتجًا واحدًا على الأقل");
       return;
     }
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(checkoutForm);
     const lines = cart.map((entry, index) => {
       const product = products.find((item) => item.id === entry.id);
-      const productUrl = new URL(`/products/${product.slug}/`, location.origin).href;
-      const imageUrl = new URL(product.image, location.origin).href;
-      return `${index + 1}) ${product.name}\nرقم المنتج: ${product.id}${entry.color ? `\nاللون: ${entry.color}` : ""}\nالكمية: ${entry.quantity}\nسعر القطعة: ${moneyText(product.price)}\nإجمالي المنتج: ${moneyText(product.price * entry.quantity)}\nرابط المنتج: ${productUrl}\nصورة المنتج: ${imageUrl}`;
+      const productUrl = new URL(`/products/${product.slug}/`, location.origin)
+        .href;
+      const chosenColor = product.colorOptions?.find(
+        (c) => c.name === entry.color,
+      );
+      const chosenSize = product.sizeOptions?.find(
+        (s) => s.id === entry.sizeId,
+      );
+      const chosenImage = chosenColor
+        ? product.gallery?.find((i) => i.color_id === chosenColor.id)?.url ||
+          product.gallery?.find((i) => !i.color_id)?.url
+        : product.image;
+      const imageUrl = chosenImage
+        ? new URL(chosenImage, location.origin).href
+        : "لا تتوفر صورة خاصة بهذا اللون";
+      return `${index + 1}) ${product.name}\nرقم المنتج: ${product.id}${entry.color ? `\nاللون: ${entry.color}` : ""}${entry.sizeId ? `\nالمقاس: ${chosenSize?.label || ""}\nالأبعاد: ${dimensionText(chosenSize?.dimensions)}` : ""}\nالكمية: ${entry.quantity}\nسعر القطعة: ${moneyText(product.price)}\nإجمالي المنتج: ${moneyText(product.price * entry.quantity)}\nرابط المنتج: ${productUrl}\nصورة المنتج: ${imageUrl}`;
     });
     const total = cart.reduce((sum, entry) => {
       const product = products.find((item) => item.id === entry.id);
       return sum + product.price * entry.quantity;
     }, 0);
     const message = `*طلب جديد | ArchiCiva*\n\n*بيانات العميل*\nالاسم: ${form.get("name")}\nالهاتف: ${form.get("phone")}\nالمدينة: ${form.get("city")}\nالعنوان: ${form.get("address")}\nالملاحظات: ${form.get("notes") || "لا يوجد"}\nتفاصيل إضافية: ${form.get("details") || "لا يوجد"}\n\n*المنتجات (${cart.length})*\n\n${lines.join("\n\n──────────\n\n")}\n\n*الإجمالي النهائي: ${moneyText(total)}*\n\nيرجى مراجعة تفاصيل الطلب والتواصل مع العميل لتأكيده.`;
-    window.location.assign(`https://wa.me/${config.whatsapp}?text=${encodeURIComponent(message)}`);
+    window.location.assign(
+      `https://wa.me/${config.whatsapp}?text=${encodeURIComponent(message)}`,
+    );
   });
 
 const faq = [
@@ -390,7 +790,14 @@ const steps = [
   {
     key: "type",
     question: "وش النوع اللي تفضله؟",
-    options: ["مركن", "حوض مربع", "حوض مستطيل", "نافورة", "شلال", "لاند سكيب وتنسيق حدائق"],
+    options: [
+      "مركن",
+      "حوض مربع",
+      "حوض مستطيل",
+      "نافورة",
+      "شلال",
+      "لاند سكيب وتنسيق حدائق",
+    ],
   },
   {
     key: "budget",
@@ -411,8 +818,15 @@ function scoreProducts(a, widen = false) {
   const wanted = categoryMap[a.type] || [];
   const budget = Number(a.budget);
   return products
-    .filter((product) => widen || a.type === "لاند سكيب وتنسيق حدائق" || wanted.includes(product.subcategory))
-    .filter((product) => widen || a.budget === "بدون حد" || product.price <= budget)
+    .filter(
+      (product) =>
+        widen ||
+        a.type === "لاند سكيب وتنسيق حدائق" ||
+        wanted.includes(product.subcategory),
+    )
+    .filter(
+      (product) => widen || a.budget === "بدون حد" || product.price <= budget,
+    )
     .map((product) => {
       let score = 0,
         reasons = [];
@@ -458,12 +872,14 @@ function initAssistant(root, floating = false) {
   const ask = () => {
     const current = steps[step];
     addMessage(current.question);
-    options.innerHTML = current.options
-      .map(
-        (option) =>
-          `<button type="button" data-answer="${option}">${current.key === "budget" ? `${option} ريال` : option}</button>`,
-      )
-      .join("") + '<button type="button" data-faq-mode>اسأل عن منتج أو خدمة</button>';
+    options.innerHTML =
+      current.options
+        .map(
+          (option) =>
+            `<button type="button" data-answer="${option}">${current.key === "budget" ? `${option} ريال` : option}</button>`,
+        )
+        .join("") +
+      '<button type="button" data-faq-mode>اسأل عن منتج أو خدمة</button>';
   };
   const showResults = () => {
     let scored = scoreProducts(assistantState.answers);
@@ -480,10 +896,21 @@ function initAssistant(root, floating = false) {
   const answerQuestion = (query) => {
     const normalized = normalizeArabic(query);
     const matched = searchProducts(query, 4);
-    if (matched.length) return `لقيت المنتجات دي من الكتالوج الحالي، اضغط على أي منتج لتشوف التفاصيل:<div class="assistant-results">${matched.map((product) => `<a class="assistant-result" href="${pagePath(`/products/${product.slug}/`)}"><img src="${product.image}" alt=""><span><b>${escapeHtml(product.name)}</b><small>${moneyText(product.price)} · السعر الحالي</small></span></a>`).join("")}</div>`;
-    if (/لاند|حدائق|تنسيق|صيانه|زراعه|اضاءه|برجول|تفصيل|جمله|مشاريع/.test(normalized)) return `نقدم خدمات تنسيق الحدائق واللاند سكيب، والتفصيل حسب الطلب، والبيع بالجملة للتجار وأصحاب المشاريع. السعر حسب تفاصيل المشروع؛ تواصل معنا لعرض مناسب. <a href="${pagePath('/landscaping/')}">خدمات اللاند سكيب</a> · <a href="${pagePath('/custom-design/')}">التفصيل حسب الطلب</a> · <a href="${pagePath('/wholesale/')}">بيع الجملة</a>`;
-    const match = faq.find((item) => item.keys.some((key) => normalized.includes(normalizeArabic(key))));
-    return match?.answer || "ما عندي معلومة مؤكدة عن هذا السؤال. اكتب اسم المنتج أو تواصل معنا عبر واتساب للتفاصيل.";
+    if (matched.length)
+      return `لقيت المنتجات دي من الكتالوج الحالي، اضغط على أي منتج لتشوف التفاصيل:<div class="assistant-results">${matched.map((product) => `<a class="assistant-result" href="${pagePath(`/products/${product.slug}/`)}"><img src="${product.image}" alt=""><span><b>${escapeHtml(product.name)}</b><small>${moneyText(product.price)} · السعر الحالي</small></span></a>`).join("")}</div>`;
+    if (
+      /لاند|حدائق|تنسيق|صيانه|زراعه|اضاءه|برجول|تفصيل|جمله|مشاريع/.test(
+        normalized,
+      )
+    )
+      return `نقدم خدمات تنسيق الحدائق واللاند سكيب، والتفصيل حسب الطلب، والبيع بالجملة للتجار وأصحاب المشاريع. السعر حسب تفاصيل المشروع؛ تواصل معنا لعرض مناسب. <a href="${pagePath("/landscaping/")}">خدمات اللاند سكيب</a> · <a href="${pagePath("/custom-design/")}">التفصيل حسب الطلب</a> · <a href="${pagePath("/wholesale/")}">بيع الجملة</a>`;
+    const match = faq.find((item) =>
+      item.keys.some((key) => normalized.includes(normalizeArabic(key))),
+    );
+    return (
+      match?.answer ||
+      "ما عندي معلومة مؤكدة عن هذا السؤال. اكتب اسم المنتج أو تواصل معنا عبر واتساب للتفاصيل."
+    );
   };
   options.addEventListener("click", (event) => {
     const answer = event.target.closest("[data-answer]");
@@ -510,7 +937,9 @@ function initAssistant(root, floating = false) {
       ask();
     }
     if (event.target.closest("[data-faq-mode]")) {
-      addMessage("اكتب اسم منتج أو اسأل عن سعره أو إحدى خدماتنا. الأسعار تتحدث من الكتالوج الحالي.");
+      addMessage(
+        "اكتب اسم منتج أو اسأل عن سعره أو إحدى خدماتنا. الأسعار تتحدث من الكتالوج الحالي.",
+      );
       options.innerHTML =
         '<input type="search" data-faq-input aria-label="سؤالك" placeholder="مثال: حوض مستطيل أو تنسيق حدائق"><button type="button" data-faq-send>إرسال</button><button type="button" data-assistant-restart>ابدأ الاختيار</button>';
     }

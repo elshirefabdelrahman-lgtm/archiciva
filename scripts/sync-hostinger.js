@@ -12,6 +12,14 @@ if (!fs.existsSync(path.join(dist, 'index.html'))) {
 
 const entries = fs.readdirSync(dist);
 const previous = fs.existsSync(manifest) ? JSON.parse(fs.readFileSync(manifest, 'utf8')) : [];
+const protectedEntries = new Set(['.git','src','scripts','source-assets','node_modules','supabase','package.json','package-lock.json','.github']);
+for (const name of [...previous,...entries]) {
+  const resolved=path.resolve(root,name);
+  if(!name || name==='.' || name==='..' || /[\\/\r\n]/.test(name) || path.dirname(resolved)!==root || protectedEntries.has(name)) {
+    throw new Error(`Unsafe generated-output entry: ${name}`);
+  }
+}
+fs.writeFileSync(path.join(root,'.hostinger-git-paths'),[...new Set([...previous,...entries,'.hostinger-output.json'])].join('\n')+'\n');
 for (const name of previous) {
   fs.rmSync(path.join(root, name), { recursive: true, force: true });
 }

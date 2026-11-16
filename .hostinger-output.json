@@ -1,8 +1,11 @@
 [
   "404.html",
   "about",
+  "admin",
   "assets",
   "cart",
+  "catalog-hash.txt",
+  "catalog-version.json",
   "contact",
   "custom-design",
   "faq",
