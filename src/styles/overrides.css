@@ -438,3 +438,9 @@ h1,h2,h3,.hero h1,.page-hero h1,.section-heading h2,.finder-band h2,.whatsapp-ct
 .wholesale-email-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0 0}
 .wholesale-email-actions .button{display:flex;align-items:center;justify-content:center;text-align:center;min-height:52px}
 @media(max-width:600px){.wholesale-email-actions{grid-template-columns:1fr}}
+
+/* Clear administration entry on desktop and mobile. */
+.site-footer .footer-bottom{display:flex;flex-direction:column;align-items:center;gap:16px;padding-block:24px 90px}
+.site-footer .footer-admin-link{display:inline-flex;align-items:center;justify-content:center;gap:14px;min-height:48px;min-width:150px;padding:10px 24px;border:1px solid #df7515;border-radius:12px;background:#df7515;color:#fff;font-weight:800;font-size:1rem}
+.site-footer .footer-admin-link:hover{background:#ad5208}
+.site-footer .footer-admin-link:focus-visible{outline:3px solid #fff;outline-offset:4px}
