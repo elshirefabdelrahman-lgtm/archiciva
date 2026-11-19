@@ -17,6 +17,7 @@ const statuses = {
   archived: "محذوف (قابل للاستعادة)",
 };
 let rows = [],
+  repaintProducts = null,
   covers = new Map(),
   categories = [],
   current = null,
@@ -38,6 +39,8 @@ async function run(fn) {
   if (busy) return;
   busy = true;
   root.setAttribute("aria-busy", "true");
+  const controls = [...root.querySelectorAll('button')].map(button=>[button,button.disabled]);
+  controls.forEach(([button])=>{button.disabled=true;});
   try {
     message("");
     await fn();
@@ -52,6 +55,7 @@ async function run(fn) {
   } finally {
     busy = false;
     root.removeAttribute("aria-busy");
+    controls.forEach(([button,disabled])=>{if(button.isConnected) button.disabled=disabled;});
   }
 }
 async function all(table) {
@@ -68,8 +72,8 @@ async function all(table) {
     if (page.length < 500) return data;
   }
 }
-async function loadCovers() {
-  const media = await all("product_images");
+async function loadCovers(media = null) {
+  media ??= await all("product_images");
   covers = new Map(
     await Promise.all(
       rows.map(async (p) => {
@@ -124,8 +128,9 @@ async function openAdmin() {
     showLogin();
     throw Error("هذا الحساب غير مصرح له بإدارة المتجر.");
   }
-  [rows, categories] = await Promise.all([all("products"), all("categories")]);
-  await loadCovers();
+  const initial = await Promise.all([all("products"), all("categories"), all("product_images")]);
+  [rows, categories] = initial;
+  await loadCovers(initial[2]);
   root.innerHTML = `<header class="admin-heading"><div><span class="eyebrow">ArchiCiva / إدارة المتجر</span><h1>لوحة التحكم</h1><p>${esc(user.email)}</p></div><button id="logout" class="button button--outline">تسجيل الخروج</button></header><nav class="admin-tabs"><button class="button" id="products-tab">المنتجات والأسعار</button><button class="button button--outline" id="categories-tab">الأقسام</button></nav><div id="admin-workspace"></div>`;
   document.querySelector("#logout").onclick = () =>
     run(async () => {
@@ -162,6 +167,7 @@ function showProducts() {
       cat = document.querySelector("#admin-category").value,
       status = document.querySelector("#admin-status").value;
     document.querySelector("#admin-rows").innerHTML = rows
+      .slice().sort((a,b)=>a.sort_order-b.sort_order || a.id.localeCompare(b.id))
       .filter(
         (p) =>
           (!term || `${p.name} ${p.id}`.toLowerCase().includes(term)) &&
@@ -230,6 +236,7 @@ function showProducts() {
       await loadCovers();
       showProducts();
     });
+  repaintProducts = paint;
   paint();
 }
 function belongsToCategory(id, selected) {
@@ -251,9 +258,9 @@ function categoryIsVisible(id) {
   }
   return true;
 }
-async function editProduct(id) {
+async function editProduct(id, saved = null) {
   if (dirty && !confirm("تجاهل التعديلات غير المحفوظة؟")) return;
-  current = id
+  current = saved || (id
     ? check(await db.from("products").select("*").eq("id", id).single())
     : {
         id: `AC-${crypto.randomUUID().slice(0, 8)}`,
@@ -273,8 +280,8 @@ async function editProduct(id) {
           relatedProducts: [],
           complementaryProducts: [],
         },
-      };
-  [colors, sizes, images] = id
+      });
+  if (!saved) [colors, sizes, images] = id
     ? await Promise.all(
         ["product_colors", "product_sizes", "product_images"].map((t) =>
           db
@@ -286,7 +293,7 @@ async function editProduct(id) {
         ),
       )
     : [[], [], []];
-  for (const i of images) i.preview = await preview(i);
+  await Promise.all(images.map(async i => { i.preview = await preview(i); }));
   const d = current.details;
   const host = document.querySelector("#product-editor");
   host.innerHTML = `<form id="edit-form" class="admin-editor"><header><h2>${esc(current.name || "إضافة منتج جديد")}</h2><p>اكتب بيانات المنتج، أضف صوره، ثم اضغط حفظ.</p></header><div class="admin-form-grid">${field("اسم المنتج", "name", current.name, "text", 'required maxlength="200"')}<label>القسم<select name="category_id" required>${categories
@@ -310,7 +317,7 @@ async function editProduct(id) {
     )
     .join(
       "",
-    )}</select></label></div>${field("ترتيب ظهور المنتج", "storePosition", (d.storePosition ?? current.sort_order ?? rows.length) + 1, "number", 'required min="1" max="1000000" step="1"')}<p>الرقم الأصغر يظهر أولًا في القسم وكل المنتجات. الصف الأول يختلف حسب حجم الشاشة. ترتيب الصور داخل المنتج مستقل عن هذا الرقم.</p>${area("وصف المنتج", "description", d.description)}<section><h3>الألوان</h3><div id="edit-colors"></div><button type="button" id="add-color" class="button button--outline">إضافة لون</button></section><section><h3>المقاسات والأبعاد</h3><p>اترك البعد غير المناسب فارغًا. كل الأسعار حاليًا على مستوى المنتج.</p><div id="edit-sizes"></div><button type="button" id="add-size" class="button button--outline">إضافة مقاس</button></section><section><h3>صور المنتج وصور الألوان</h3><p>اختر اللون المناسب تحت كل صورة، وحدّد الصورة الرئيسية. استخدم الأسهم لترتيب الصور.</p><label>لون الصور الجديدة<select id="upload-color"><option value="">صور عامة للمنتج</option></select></label><label>إضافة صور من جهازك — حتى 10 ميجابايت للصورة<input id="image-upload" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><div id="edit-images" class="admin-media"></div></section><div class="admin-save"><button class="button" type="submit">حفظ المنتج</button><button class="button button--outline" type="button" id="archive-product">حذف من المتجر (قابل للاستعادة)</button><button class="button button--outline" type="button" id="check-publication">هل ظهر التعديل في الموقع؟</button><span id="save-state"></span></div></form>`;
+    )}</select></label></div>${field("مكان المنتج في كل المنتجات", "storePosition", (current.version ? current.sort_order : rows.filter(p=>p.status==="published").length) + 1, "number", 'required min="1" max="1000000" step="1"')}<p>هذا مكان المنتج وسط كل المنتجات: 1 في البداية، و5 ينقله للمكان الخامس ويزيح الباقي تلقائيًا. الموبايل يعرض منتجين في الصف، والكمبيوتر حتى أربعة. داخل القسم يظهر بنفس الترتيب النسبي.</p>${area("وصف المنتج", "description", d.description)}<section><h3>الألوان</h3><div id="edit-colors"></div><button type="button" id="add-color" class="button button--outline">إضافة لون</button></section><section><h3>المقاسات والأبعاد</h3><p>اترك البعد غير المناسب فارغًا. كل الأسعار حاليًا على مستوى المنتج.</p><div id="edit-sizes"></div><button type="button" id="add-size" class="button button--outline">إضافة مقاس</button></section><section><h3>صور المنتج وصور الألوان</h3><p>اختر اللون المناسب تحت كل صورة، وحدّد الصورة الرئيسية. استخدم الأسهم لترتيب الصور.</p><label>لون الصور الجديدة<select id="upload-color"><option value="">صور عامة للمنتج</option></select></label><label>إضافة صور من جهازك — حتى 10 ميجابايت للصورة<input id="image-upload" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><div id="edit-images" class="admin-media"></div></section><div class="admin-save"><button class="button" type="submit">حفظ المنتج</button><button class="button button--outline" type="button" id="archive-product">حذف من المتجر (قابل للاستعادة)</button><button class="button button--outline" type="button" id="check-publication">هل ظهر التعديل في الموقع؟</button><span id="save-state"></span></div></form>`;
   document.querySelector("#check-publication").onclick = () =>
     run(async () => {
       const r = await fetch("/catalog-version.json", { cache: "no-store" });
@@ -327,6 +334,11 @@ async function editProduct(id) {
         : "التعديل محفوظ، وظهوره في الموقع قيد الانتظار. تحقق بعد عدة دقائق.";
     });
   const form = document.querySelector("#edit-form");
+  const positionInput=form.elements.storePosition;
+  const rowPicker=document.createElement("label");
+  rowPicker.innerHTML='نقل إلى بداية صف (4 منتجات في الصف)<select id="position-row"><option value="">اختر صفًا أو اكتب المكان مباشرةً</option>'+Array.from({length:Math.ceil((rows.filter(p=>p.status==="published").length+1)/4)},(_,n)=>'<option value="'+(n*4+1)+'">الصف '+(n+1)+' — المكان '+(n*4+1)+'</option>').join("")+'</select>';
+  positionInput.closest("label").after(rowPicker);
+  rowPicker.querySelector("select").onchange=e=>{if(e.target.value){positionInput.value=e.target.value;dirty=true;}};
   form.oninput = () => {
     dirty = true;
   };
@@ -411,7 +423,16 @@ async function editProduct(id) {
   dirty = false;
   host.scrollIntoView({ behavior: "smooth" });
 }
+const signedPreviews = new Map();
 async function preview(i) {
+  const key = `${i.bucket}/${i.path}`;
+  const cached = signedPreviews.get(key);
+  if (cached && cached.expires > Date.now()) return cached.url;
+  if (i.bucket !== "legacy" && i.bucket !== "catalog-public") {
+    const url = check(await db.storage.from(i.bucket).createSignedUrl(i.path, 3600)).signedUrl;
+    signedPreviews.set(key, {url, expires: Date.now()+3000000});
+    return url;
+  }
   return i.bucket === "legacy"
     ? i.path
     : i.bucket === "catalog-public"
@@ -545,17 +566,20 @@ async function saveProduct() {
     throw Error("أضف صورة واحدة على الأقل للمنتج قبل حفظه.");
   message("جارٍ الحفظ…");
   // Stage immutable copies before the atomic DB save; originals are retained for recovery.
-  if (status === "published")
-    for (const i of images.filter((i) => i.bucket === "catalog-drafts")) {
-      const blob = check(await db.storage.from(i.bucket).download(i.path));
-      check(
-        await db.storage
-          .from("catalog-public")
-          .upload(i.path, blob, { contentType: blob.type, upsert: true }),
-      );
-      i.bucket = "catalog-public";
-      i.preview = await preview(i);
-    }
+  if (status === "published") {
+    const pending=images.filter(i=>i.bucket==="catalog-drafts");
+    let next=0;
+    await Promise.all(Array.from({length:Math.min(3,pending.length)},async()=>{
+      while(next<pending.length){
+        const i=pending[next++];
+        // Copy inside Storage; don't download the file to the browser and upload it again.
+        const result=await db.storage.from("catalog-drafts").copy(i.path,i.path,{destinationBucket:"catalog-public"});
+        if(result.error && !/already exists|duplicate/i.test(result.error.message)) throw result.error;
+        i.bucket="catalog-public";
+        i.preview=await preview(i);
+      }
+    }));
+  }
   const details = { ...current.details };
   for (const key of [
     "description",
@@ -596,8 +620,9 @@ async function saveProduct() {
     details.seoTitle = f.get("name").trim();
   const position=Number(f.get("storePosition"));
   if(!Number.isInteger(position)||position<1||position>1000000) throw Error("ترتيب الظهور يجب أن يكون رقمًا صحيحًا من 1 إلى 1000000.");
-  details.storePosition=position-1;
+  delete details.storePosition;
   const payload = {
+    ...(!current.version || (status === "published" && current.status !== "published") || position !== current.sort_order + 1 ? { desired_position: position } : {}),
     id: current.id,
     slug: current.slug || "product-" + current.id.toLowerCase(),
     name: f.get("name").trim(),
@@ -621,10 +646,18 @@ async function saveProduct() {
     }),
   );
   dirty = false;
-  rows = await all("products");
-  await loadCovers();
-  message("تم حفظ المنتج. قد يستغرق ظهوره في الموقع بضع دقائق.");
-  await editProduct(current.id);
+  const [saved,positions] = await Promise.all([
+    db.from("products").select("*").eq("id",current.id).single().then(check),
+    db.from("products").select("id,sort_order,version").then(check),
+  ]);
+  const order=new Map(positions.map(p=>[p.id,p]));
+  rows=rows.filter(p=>p.id!==saved.id).map(p=>({...p,...order.get(p.id)}));
+  rows.push(saved);
+  const cover=images.find(i=>i.is_primary)||images[0];
+  covers.set(saved.id,cover?.preview||"");
+  repaintProducts?.();
+  message("تم الحفظ. الأسعار والترتيب والقسم تتحدث عند فتح المتجر. رابط المنتج الجديد يظهر بعد اكتمال النشر التلقائي.");
+  await editProduct(saved.id,saved);
 }
 function showCategories() {
   dirty = false;

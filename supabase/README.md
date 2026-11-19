@@ -43,3 +43,9 @@ GitHub Actions checks for catalog changes every five minutes and rebuilds HTML, 
 `node scripts/verify-catalog-import.js` is the initial migration acceptance check against the original files. It is expected to fail after legitimate owner edits, and must not be used as an ongoing CI check.
 
 For disaster recovery, export current database rows and Storage media from Supabase before major maintenance. Re-importing the original static catalog will not restore subsequent administrator work. Reverting a Git commit also does not revert Supabase data.
+
+## Catalog positions and faster administration
+
+Apply `migrations/005_catalog_positions.sql` after 001–004. It preserves the visible order, replaces priority ties with contiguous `products.sort_order` positions, and extends the existing administrator-only save RPC with optional one-based `desired_position`. A transaction advisory lock serializes moves; displaced published products shift automatically and receive fresh optimistic versions. `test-catalog-positions.sql` verifies upward/downward moves, displacement, counts and non-admin denial, then rolls back all test writes.
+
+The editor copies pending images between Storage buckets server-side (up to three at once), caches private previews temporarily, and refreshes only the saved product plus the small position/version list. Existing products update dynamically after refresh; a brand-new crawlable product URL still needs the scheduled build and hosting deployment. Row shortcuts assume four products per row; responsive layouts can show fewer.

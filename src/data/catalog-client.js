@@ -46,11 +46,7 @@ export async function loadCatalog() {
     .filter((c) => !c.parent_id)
     .sort(sort)
     .map((c) => ({ ...c.metadata, ...c }));
-  const products = rows.sort((a,b) => {
-    const x = a.details?.storePosition ?? a.sort_order;
-    const y = b.details?.storePosition ?? b.sort_order;
-    return x-y || Number(b.details?.storePosition != null)-Number(a.details?.storePosition != null) || sort(a,b);
-  }).map((r) => {
+  const products = rows.sort(sort).map((r) => {
     const gallery = images
       .filter((i) => i.product_id === r.id)
       .sort(
@@ -86,7 +82,7 @@ export async function loadCatalog() {
       subcategory: r.category_id,
       category: category?.parent_id || r.category_id,
       version: r.version,
-      sortOrder: r.details?.storePosition ?? r.sort_order,
+      sortOrder: r.sort_order,
       shortDescription:
         r.details.shortDescription ||
         r.details.description?.slice(0, 160) ||
