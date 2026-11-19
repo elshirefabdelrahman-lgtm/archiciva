@@ -310,7 +310,7 @@ async function editProduct(id) {
     )
     .join(
       "",
-    )}</select></label></div>${area("وصف المنتج", "description", d.description)}<section><h3>الألوان</h3><div id="edit-colors"></div><button type="button" id="add-color" class="button button--outline">إضافة لون</button></section><section><h3>المقاسات والأبعاد</h3><p>اترك البعد غير المناسب فارغًا. كل الأسعار حاليًا على مستوى المنتج.</p><div id="edit-sizes"></div><button type="button" id="add-size" class="button button--outline">إضافة مقاس</button></section><section><h3>صور المنتج وصور الألوان</h3><p>اختر اللون المناسب تحت كل صورة، وحدّد الصورة الرئيسية. استخدم الأسهم لترتيب الصور.</p><label>إضافة صور من جهازك — حتى 10 ميجابايت للصورة<input id="image-upload" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><div id="edit-images" class="admin-media"></div></section><div class="admin-save"><button class="button" type="submit">حفظ المنتج</button><button class="button button--outline" type="button" id="archive-product">حذف من المتجر (قابل للاستعادة)</button><button class="button button--outline" type="button" id="check-publication">هل ظهر التعديل في الموقع؟</button><span id="save-state"></span></div></form>`;
+    )}</select></label></div>${field("ترتيب ظهور المنتج", "storePosition", (d.storePosition ?? current.sort_order ?? rows.length) + 1, "number", 'required min="1" max="1000000" step="1"')}<p>الرقم الأصغر يظهر أولًا في القسم وكل المنتجات. الصف الأول يختلف حسب حجم الشاشة. ترتيب الصور داخل المنتج مستقل عن هذا الرقم.</p>${area("وصف المنتج", "description", d.description)}<section><h3>الألوان</h3><div id="edit-colors"></div><button type="button" id="add-color" class="button button--outline">إضافة لون</button></section><section><h3>المقاسات والأبعاد</h3><p>اترك البعد غير المناسب فارغًا. كل الأسعار حاليًا على مستوى المنتج.</p><div id="edit-sizes"></div><button type="button" id="add-size" class="button button--outline">إضافة مقاس</button></section><section><h3>صور المنتج وصور الألوان</h3><p>اختر اللون المناسب تحت كل صورة، وحدّد الصورة الرئيسية. استخدم الأسهم لترتيب الصور.</p><label>لون الصور الجديدة<select id="upload-color"><option value="">صور عامة للمنتج</option></select></label><label>إضافة صور من جهازك — حتى 10 ميجابايت للصورة<input id="image-upload" type="file" accept="image/jpeg,image/png,image/webp" multiple></label><div id="edit-images" class="admin-media"></div></section><div class="admin-save"><button class="button" type="submit">حفظ المنتج</button><button class="button button--outline" type="button" id="archive-product">حذف من المتجر (قابل للاستعادة)</button><button class="button button--outline" type="button" id="check-publication">هل ظهر التعديل في الموقع؟</button><span id="save-state"></span></div></form>`;
   document.querySelector("#check-publication").onclick = () =>
     run(async () => {
       const r = await fetch("/catalog-version.json", { cache: "no-store" });
@@ -384,7 +384,7 @@ async function editProduct(id) {
           id: crypto.randomUUID(),
           bucket: "catalog-drafts",
           path,
-          color_id: null,
+          color_id: document.querySelector("#upload-color").value || null,
           alt: current.name,
           is_primary: images.length === 0,
         };
@@ -477,6 +477,8 @@ function paintSizes() {
   };
 }
 function paintImages() {
+  const uploadColor = document.querySelector("#upload-color");
+  if (uploadColor) { const selected=uploadColor.value; uploadColor.innerHTML='<option value="">صور عامة للمنتج</option>'+colors.map(c=>`<option value="${c.id}">${esc(c.name || "لون جديد")}</option>`).join(""); uploadColor.value=colors.some(c=>c.id===selected)?selected:""; }
   const el = document.querySelector("#edit-images");
   el.innerHTML = images
     .map(
@@ -592,6 +594,9 @@ async function saveProduct() {
   }
   if (!current.version || f.get("name").trim() !== current.name)
     details.seoTitle = f.get("name").trim();
+  const position=Number(f.get("storePosition"));
+  if(!Number.isInteger(position)||position<1||position>1000000) throw Error("ترتيب الظهور يجب أن يكون رقمًا صحيحًا من 1 إلى 1000000.");
+  details.storePosition=position-1;
   const payload = {
     id: current.id,
     slug: current.slug || "product-" + current.id.toLowerCase(),

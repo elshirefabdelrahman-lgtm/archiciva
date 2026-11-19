@@ -439,8 +439,5 @@ h1,h2,h3,.hero h1,.page-hero h1,.section-heading h2,.finder-band h2,.whatsapp-ct
 .wholesale-email-actions .button{display:flex;align-items:center;justify-content:center;text-align:center;min-height:52px}
 @media(max-width:600px){.wholesale-email-actions{grid-template-columns:1fr}}
 
-/* Clear administration entry on desktop and mobile. */
-.site-footer .footer-bottom{display:flex;flex-direction:column;align-items:center;gap:16px;padding-block:24px 90px}
-.site-footer .footer-admin-link{display:inline-flex;align-items:center;justify-content:center;gap:14px;min-height:48px;min-width:150px;padding:10px 24px;border:1px solid #df7515;border-radius:12px;background:#df7515;color:#fff;font-weight:800;font-size:1rem}
-.site-footer .footer-admin-link:hover{background:#ad5208}
-.site-footer .footer-admin-link:focus-visible{outline:3px solid #fff;outline-offset:4px}
+
+.store-location{padding-block:40px 60px}.store-location__map{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:20px;background:#edf1ec}.store-location__map iframe{display:block;width:100%;height:400px;border:0;pointer-events:none}.store-location__map>a{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:24px}.store-location__map>a>span{background:#203b2d;color:#fff;padding:12px 22px;border-radius:999px;font-weight:700;box-shadow:0 3px 15px #0003}.store-location__map>a:focus-visible{outline:4px solid #df7515;outline-offset:-5px}@media(max-width:600px){.store-location__map iframe{height:300px}.store-location__map>a{padding:16px}}

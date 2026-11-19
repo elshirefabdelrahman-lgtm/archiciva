@@ -5,8 +5,10 @@ document.head.insertAdjacentHTML(
 );
 let catalogReady = true;
 let products;
+let catalogCategories = [];
 try {
   const catalog = await loadCatalog();
+  catalogCategories = catalog.categories;
   const response = await fetch("/catalog-version.json", {
     cache: "no-store",
     signal: AbortSignal.timeout(10000),
@@ -112,8 +114,27 @@ const number = (value) =>
 const money = (value) =>
   `<span class="money"><span>${number(value)}</span><img class="sar-symbol" src="${assetPath("/assets/icons/saudi-riyal-symbol.svg")}" width="14" height="16" alt="ريال سعودي"></span>`;
 const pricing = (p, q = 1) =>
-  `<div class="pricing pricing--compact"><strong>${money(p.price * q)}</strong>${p.originalPrice > p.price ? `<del>${money(p.originalPrice * q)}</del><span class="discount-badge">خصم ${Math.round((1 - p.price / p.originalPrice) * 10000) / 100}%</span>` : ""}</div>`;
+  `<div class="pricing pricing--compact"><strong>${money(p.price * q)}</strong>${p.originalPrice > p.price ? `<del>${money(p.originalPrice * q)}</del><span class="discount-badge">خصم ${Math.round((1 - p.price / p.originalPrice) * 100)}%</span>` : ""}</div>`;
 const moneyText = (value) => `${number(value)} ريال سعودي`;
+// Reconcile each published listing with its actual category, including new or moved products.
+const listingGrid = document.querySelector("[data-catalog-categories]");
+if (listingGrid && catalogReady) {
+  const scope = JSON.parse(listingGrid.dataset.catalogCategories);
+  const listing = products.filter(p => !scope || scope.includes(p.subcategory));
+  if (scope?.length > 1) listing.sort((a,b)=>scope.indexOf(a.subcategory)-scope.indexOf(b.subcategory));
+  listingGrid.innerHTML = listing.map(p => {
+    const category = catalogCategories.find(c=>c.id===p.subcategory);
+    const url = `/products/${p.slug}/`;
+    const color = p.availableColors?.length;
+    const choose = color || p.sizeOptions?.length > 1;
+    return `<article class="product-card" data-product-card data-name="${escapeHtml([p.name,p.shortDescription,p.material,p.color,...p.tags].filter(Boolean).join(" "))}" data-category="${escapeHtml(p.subcategory)}" data-price="${p.price}" data-size="${escapeHtml(p.size)}" data-sizes="${escapeHtml(JSON.stringify(p.sizeOptions?.map(s=>s.label)||[p.size]))}" data-color="${escapeHtml(p.color)}"><a class="product-card__image" href="${url}" aria-label="عرض ${escapeHtml(p.name)}"><img src="${escapeHtml(p.image)}" width="480" height="524" loading="lazy" decoding="async" alt="${escapeHtml(p.alt)}"></a><div class="product-card__body"><span class="eyebrow">${escapeHtml(category?.shortName||category?.name||"منتج")}</span><h3><a href="${url}">${escapeHtml(p.name)}</a></h3>${pricing(p)}<div class="product-card__actions"><a class="text-link" href="${url}">عرض المنتج</a>${choose?`<a class="button button--small" href="${url}#${color?"choose-color":"choose-size"}">${color?"اختر اللون":"اختر المقاس"}</a>`:`<button class="button button--small" type="button" data-add-to-cart="${p.id}">أضف للسلة</button>`}</div></div></article>`;
+  }).join("");
+  const categoryFilter = document.querySelector("[data-filter-category]");
+  if(categoryFilter) categoryFilter.innerHTML='<option value="">كل الأشكال</option>'+catalogCategories.filter(c=>listing.some(p=>p.subcategory===c.id)).map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}</option>`).join("");
+  const sizeFilter = document.querySelector("[data-filter-size]");
+  if(sizeFilter) sizeFilter.innerHTML='<option value="">كل الأحجام</option>'+[...new Set(listing.flatMap(p=>p.sizeOptions?.map(s=>s.label)||[p.size]))].filter(Boolean).map(s=>`<option>${escapeHtml(s)}</option>`).join("");
+  document.querySelector("[data-result-count]").textContent=listing.length;
+}
 const safeQuantity = (value) => {
   const quantity = Number(value);
   return Number.isFinite(quantity)
